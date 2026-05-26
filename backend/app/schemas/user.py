@@ -1,7 +1,7 @@
 """
 用户相关的 Pydantic schemas
 """
-from pydantic import BaseModel, Field, validator
+from pydantic import BaseModel, Field, field_validator
 
 
 class InitSystemRequest(BaseModel):
@@ -10,14 +10,16 @@ class InitSystemRequest(BaseModel):
     password: str = Field(..., min_length=6, max_length=100, description="密码")
     password_confirm: str = Field(..., description="确认密码")
 
-    @validator("password_confirm")
-    def passwords_match(cls, v, values):
+    @field_validator("password_confirm")
+    @classmethod
+    def passwords_match(cls, v, info):
         """验证两次密码是否一致"""
-        if "password" in values and v != values["password"]:
+        if "password" in info.data and v != info.data["password"]:
             raise ValueError("两次输入的密码不一致")
         return v
 
-    @validator("username")
+    @field_validator("username")
+    @classmethod
     def username_alphanumeric(cls, v):
         """用户名只能包含字母、数字和下划线"""
         if not v.replace("_", "").isalnum():

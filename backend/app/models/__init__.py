@@ -3,6 +3,8 @@ from app.models.task import DownloadTask, TaskStatus
 from app.models.enums import TaskType, FileExtension
 from app.models.file import DownloadedFile
 from app.models.chat import ChatSubscription
+from app.models.user import User
+from app.models.system_setting import SystemSetting
 from app.models.account import TelegramAccount, AccountStatus
 from app.models.forward import ForwardTask
 from app.models.listen import ListenSubscription, ListenStatus
@@ -16,6 +18,8 @@ __all__ = [
     "FileExtension",
     "DownloadedFile",
     "ChatSubscription",
+    "User",
+    "SystemSetting",
     "TelegramAccount",
     "AccountStatus",
     "ForwardTask",

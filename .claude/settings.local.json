@@ -11,7 +11,24 @@
       "Bash(docker --version)",
       "Bash(redis-server --version)",
       "Bash(timeout 10 python -m uvicorn app.main:app --reload --host 0.0.0.0 --port 8000)",
-      "Bash(timeout 15 python -m uvicorn app.main:app --reload --host 0.0.0.0 --port 8000)"
+      "Bash(timeout 15 python -m uvicorn app.main:app --reload --host 0.0.0.0 --port 8000)",
+      "Bash(python -m uvicorn app.main:app --reload --host 0.0.0.0 --port 8000)",
+      "Bash(npm run *)",
+      "Bash(curl -s http://localhost:8000/health)",
+      "Bash(echo \"Backend: $\\(curl -s http://localhost:8000/health && echo 'OK' || echo 'NOT RESPONDING'\\)\")",
+      "Bash(curl -s http://localhost:5173)",
+      "Bash(echo \"Frontend: $\\(curl -s http://localhost:5173)",
+      "Bash(python -c \"from app.core.config import settings; print\\(settings.DATABASE_URL\\)\")",
+      "Bash(dir \"c:\\\\Users\\\\Administrator\\\\Documents\\\\GitHub\\\\telegram_media_nas\\\\backend\\\\\" 2>/dev/null)",
+      "Bash(dir /B \"C:\\\\Users\\\\Administrator\\\\Documents\\\\GitHub\\\\telegram_media_nas\\\\backend\")",
+      "Bash(python -c \"from app.main import app; print\\('Import successful'\\)\")",
+      "Bash(python -c \"from app.models import User, SystemSetting; from app.database import init_db; import asyncio; asyncio.run\\(init_db\\(\\)\\); print\\('Database initialized successfully'\\)\")",
+      "Bash(python -c \"from app.main import app; print\\('App ready to start'\\)\")",
+      "Bash(python -c ' *)",
+      "Bash(curl -s http://localhost:8000/api/v1/auth/init-status)",
+      "Bash(curl -s http://localhost:5173/api/v1/auth/init-status)",
+      "Bash(curl -s http://localhost:5174/api/v1/auth/init-status)",
+      "Bash(curl -s -w \"\\\\nStatus: %{http_code}\\\\n\" http://localhost:5173/api/v1/auth/init-status)"
     ]
   }
 }
