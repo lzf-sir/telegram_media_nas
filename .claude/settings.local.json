@@ -1,0 +1,12 @@
+{
+  "permissions": {
+    "allow": [
+      "mcp__zread__get_repo_structure",
+      "mcp__zread__read_file",
+      "Bash(python -m venv --version)",
+      "Bash(python3 -m venv --version)",
+      "Bash(redis-cli ping *)",
+      "Bash(pip install *)"
+    ]
+  }
+}

@@ -1,0 +1,67 @@
+version: '3.8'
+
+services:
+  # Redis - 用于缓存和任务队列
+  redis:
+    image: redis:7-alpine
+    container_name: telegram_media_nas_redis
+    command: redis-server --appendonly yes
+    volumes:
+      - redis_data:/data
+    ports:
+      - "6379:6379"
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+    restart: unless-stopped
+
+  # Backend API
+  backend:
+    build:
+      context: ./backend
+      dockerfile: Dockerfile
+    container_name: telegram_media_nas_backend
+    environment:
+      # 使用 SQLite 数据库（文件存储）
+      DATABASE_URL: sqlite+aiosqlite:///./data/telegram_media_nas.db
+      REDIS_URL: redis://redis:6379/0
+      TELEGRAM_API_ID: ${TELEGRAM_API_ID}
+      TELEGRAM_API_HASH: ${TELEGRAM_API_HASH}
+      TELEGRAM_PHONE: ${TELEGRAM_PHONE}
+      DOWNLOAD_PATH: /app/downloads
+      TEMP_PATH: /app/temp
+      SESSION_PATH: /app/sessions
+      DEBUG: "true"
+    volumes:
+      - ./backend:/app
+      - downloads_data:/app/downloads
+      - temp_data:/app/temp
+      - sessions_data:/app/sessions
+      - sqlite_data:/app/data  # SQLite 数据库持久化
+    ports:
+      - "8000:8000"
+    depends_on:
+      redis:
+        condition: service_healthy
+    restart: unless-stopped
+
+  # Frontend
+  frontend:
+    build:
+      context: ./frontend
+      dockerfile: Dockerfile
+    container_name: telegram_media_nas_frontend
+    ports:
+      - "3000:80"
+    depends_on:
+      - backend
+    restart: unless-stopped
+
+volumes:
+  redis_data:
+  downloads_data:
+  temp_data:
+  sessions_data:
+  sqlite_data:  # SQLite 数据库数据卷

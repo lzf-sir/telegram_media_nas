@@ -1,0 +1,26 @@
+{
+  "hooks": {
+    "PostToolUse": [
+      {
+        "matcher": "Edit|Write",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "jq -r '.tool_input.file_path' | xargs -I {} sh -c 'npx prettier --write {} 2>/dev/null && npx eslint {} --fix 2>/dev/null'"
+          }
+        ]
+      }
+    ],
+    "Stop": [
+      {
+        "hooks": [
+          {
+            "type": "agent",
+            "prompt": "在允许 Claude 停止之前，请验证：1) 运行完整测试套件，确保所有测试通过。2) 检查 git diff 中的修改，确认没有引入 Bug。3) 检查是否有遗留的调试代码。如果发现问题，回复 {\"ok\": false, \"reason\": \"问题描述\"}。全部通过回复 {\"ok\": true}。",
+            "timeout": 120
+          }
+        ]
+      }
+    ]
+  }
+}
