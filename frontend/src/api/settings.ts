@@ -29,32 +29,32 @@ export interface BotSettings {
 export const settingsApi = {
   // ==================== Telegram 设置 ====================
   getTelegramSettings: () =>
-    api.get<TelegramSettings>('/telegram'),
+    api.get<TelegramSettings>('/settings/telegram'),
 
   updateTelegramSettings: (data: Omit<TelegramSettings, 'configured'>) =>
-    api.put('/telegram', data),
+    api.put('/settings/telegram', data),
 
   // ==================== 下载设置 ====================
   getDownloadSettings: () =>
-    api.get<DownloadSettings>('/download'),
+    api.get<DownloadSettings>('/settings/download'),
 
   updateDownloadSettings: (data: DownloadSettings) =>
-    api.put('/download', data),
+    api.put('/settings/download', data),
 
   // ==================== Bot 安全设置 ====================
   getBotSettings: () =>
-    api.get<BotSettings>('/bot'),
+    api.get<BotSettings>('/settings/bot'),
 
   updateBotSettings: (data: BotSettings) =>
-    api.put('/bot', data),
+    api.put('/settings/bot', data),
 
   // ==================== 通用设置 ====================
   getAllSettings: () =>
-    api.get<Record<string, unknown>>('/all'),
+    api.get<Record<string, unknown>>('/settings/all'),
 
   getSetting: (key: string) =>
-    api.get<{ key: string; value: string; value_type: string }>(`/${key}`),
+    api.get<{ key: string; value: string; value_type: string }>(`/settings/${key}`),
 
   updateSetting: (key: string, value: string, valueType?: string) =>
-    api.put(`/${key}`, { value, value_type: valueType }),
+    api.put(`/settings/${key}`, { value, value_type: valueType }),
 }

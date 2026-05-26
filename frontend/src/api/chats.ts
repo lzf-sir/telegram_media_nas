@@ -36,21 +36,21 @@ export interface ChatSubscribe {
 
 export const chatsApi = {
   // Get dialogs
-  getDialogs: (limit?: number) => api.get<Dialog[]>('/dialogs', { params: { limit } }),
+  getDialogs: (limit?: number) => api.get<Dialog[]>('/chats/dialogs', { params: { limit } }),
 
   // List subscriptions
-  listSubscriptions: () => api.get<ChatSubscription[]>('/subscriptions'),
+  listSubscriptions: () => api.get<ChatSubscription[]>('/chats/subscriptions'),
 
   // Subscribe
-  subscribe: (data: ChatSubscribe) => api.post<ChatSubscription>('/subscribe', data),
+  subscribe: (data: ChatSubscribe) => api.post<ChatSubscription>('/chats/subscribe', data),
 
   // Get subscription
-  getSubscription: (chat_id: string) => api.get<ChatSubscription>(`/subscriptions/${chat_id}`),
+  getSubscription: (chat_id: string) => api.get<ChatSubscription>(`/chats/subscriptions/${chat_id}`),
 
   // Update subscription
   updateSubscription: (chat_id: string, data: Partial<ChatSubscribe>) =>
-    api.put<ChatSubscription>(`/subscriptions/${chat_id}`, data),
+    api.put<ChatSubscription>(`/chats/subscriptions/${chat_id}`, data),
 
   // Unsubscribe
-  unsubscribe: (chat_id: string) => api.delete(`/subscriptions/${chat_id}`),
+  unsubscribe: (chat_id: string) => api.delete(`/chats/subscriptions/${chat_id}`),
 }

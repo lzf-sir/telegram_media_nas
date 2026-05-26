@@ -302,3 +302,7 @@ class TaskService:
 
             if tasks:
                 logger.info(f"Successfully recovered {len(tasks)} tasks")
+
+
+# Global task service instance
+task_service = TaskService()

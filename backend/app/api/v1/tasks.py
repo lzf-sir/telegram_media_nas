@@ -14,11 +14,10 @@ from app.schemas.task import (
     TaskDetailResponse, AvailableFormatsResponse,
     FileExtensionInfo, FILE_FORMATS_INFO
 )
-from app.services.task_service import TaskService
+from app.services.task_service import task_service
 from app.websocket.manager import manager
 
 router = APIRouter()
-task_service = TaskService()
 
 
 @router.post("/", response_model=TaskResponse)

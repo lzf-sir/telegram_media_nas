@@ -39,16 +39,16 @@ export interface AccountCreate {
 }
 
 export const accountsApi = {
-  list: () => api.get<TelegramAccount[]>('/'),
-  create: (data: AccountCreate) => api.post<TelegramAccount>('/', data),
-  activate: (id: number) => api.post<TelegramAccount>(`/${id}/activate`),
-  deactivate: (id: number) => api.post<TelegramAccount>(`/${id}/deactivate`),
-  delete: (id: number) => api.delete(`/${id}`),
-  getDefault: () => api.get<TelegramAccount>('/default'),
-  setDefault: (id: number) => api.post<TelegramAccount>(`/${id}/set-default`),
+  list: () => api.get<TelegramAccount[]>('/accounts/'),
+  create: (data: AccountCreate) => api.post<TelegramAccount>('/accounts/', data),
+  activate: (id: number) => api.post<TelegramAccount>(`/accounts/${id}/activate`),
+  deactivate: (id: number) => api.post<TelegramAccount>(`/accounts/${id}/deactivate`),
+  delete: (id: number) => api.delete(`/accounts/${id}`),
+  getDefault: () => api.get<TelegramAccount>('/accounts/default'),
+  setDefault: (id: number) => api.post<TelegramAccount>(`/accounts/${id}/set-default`),
   updateFingerprint: (id: number, data: {
     device_model?: string
     system_version?: string
     app_version?: string
-  }) => api.patch<TelegramAccount>(`/${id}/fingerprint`, data),
+  }) => api.patch<TelegramAccount>(`/accounts/${id}/fingerprint`, data),
 }

@@ -27,6 +27,19 @@ api.interceptors.response.use(
   (error) => {
     const message = error.response?.data?.detail || error.message || '请求失败'
     console.error('API Error:', message)
+
+    // 处理 401 未授权错误
+    if (error.response?.status === 401) {
+      // 清除过期的 token
+      localStorage.removeItem('access_token')
+      localStorage.removeItem('user_info')
+
+      // 如果不在登录页面，跳转到登录页
+      if (window.location.pathname !== '/login' && window.location.pathname !== '/init') {
+        window.location.href = '/login'
+      }
+    }
+
     return Promise.reject(error)
   }
 )

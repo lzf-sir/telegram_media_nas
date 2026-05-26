@@ -37,9 +37,9 @@ export const logsApi = {
     chat_id?: string
     limit?: number
     offset?: number
-  }) => api.get<LogListResponse>('/', { params }),
+  }) => api.get<LogListResponse>('/logs/', { params }),
 
-  getStats: () => api.get<LogStats>('/stats'),
+  getStats: () => api.get<LogStats>('/logs/stats'),
 
-  deleteOld: (days?: number) => api.delete('/old', { params: { days } }),
+  deleteOld: (days?: number) => api.delete('/logs/old', { params: { days } }),
 }

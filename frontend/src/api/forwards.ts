@@ -39,8 +39,8 @@ export interface ForwardTaskCreate {
 }
 
 export const forwardsApi = {
-  list: () => api.get<ForwardTask[]>('/'),
-  create: (data: ForwardTaskCreate) => api.post<ForwardTask>('/', data),
-  cancel: (id: number) => api.post(`/${id}/cancel`),
-  get: (id: number) => api.get<ForwardTask>(`/${id}`),
+  list: () => api.get<ForwardTask[]>('/forwards/'),
+  create: (data: ForwardTaskCreate) => api.post<ForwardTask>('/forwards/', data),
+  cancel: (id: number) => api.post(`/forwards/${id}/cancel`),
+  get: (id: number) => api.get<ForwardTask>(`/forwards/${id}`),
 }

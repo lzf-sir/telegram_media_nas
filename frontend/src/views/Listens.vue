@@ -87,7 +87,7 @@
       </el-col>
     </el-row>
 
-    <add-listen-dialog v-model="showAddDialog" @added="handleAdded" />
+    <add-listen-dialog v-model="showAddDialog" :accounts="accounts" @confirm="handleAdded" />
   </div>
 </template>
 
@@ -95,11 +95,13 @@
 import { ref, computed, onMounted } from 'vue'
 import { Plus, VideoPlay, VideoPause, Delete } from '@element-plus/icons-vue'
 import { listensApi, type ListenSubscription } from '@/api/listens'
+import { accountsApi, type TelegramAccount } from '@/api/accounts'
 import { ElMessage, ElMessageBox } from 'element-plus'
 import AddListenDialog from '@/components/AddListenDialog.vue'
 
 const loading = ref(false)
 const subscriptions = ref<ListenSubscription[]>([])
+const accounts = ref<TelegramAccount[]>([])
 const showAddDialog = ref(false)
 
 const activeCount = computed(() =>
@@ -123,6 +125,14 @@ async function fetchSubscriptions() {
     ElMessage.error('加载监听列表失败')
   } finally {
     loading.value = false
+  }
+}
+
+async function fetchAccounts() {
+  try {
+    accounts.value = await accountsApi.list()
+  } catch (error) {
+    ElMessage.error('加载账号列表失败')
   }
 }
 
@@ -186,6 +196,7 @@ function handleAdded() {
 
 onMounted(() => {
   fetchSubscriptions()
+  fetchAccounts()
 })
 </script>
 

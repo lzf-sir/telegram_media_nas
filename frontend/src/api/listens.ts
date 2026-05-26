@@ -33,9 +33,9 @@ export interface ListenSubscriptionCreate {
 }
 
 export const listensApi = {
-  listSubscriptions: () => api.get<ListenSubscription[]>('/subscriptions'),
-  create: (data: ListenSubscriptionCreate) => api.post<ListenSubscription>('/subscriptions', data),
-  start: (id: number) => api.post(`/subscriptions/${id}/start`),
-  stop: (id: number) => api.post(`/subscriptions/${id}/stop`),
-  delete: (id: number) => api.delete(`/subscriptions/${id}`),
+  listSubscriptions: () => api.get<ListenSubscription[]>('/listens/subscriptions'),
+  create: (data: ListenSubscriptionCreate) => api.post<ListenSubscription>('/listens/subscriptions', data),
+  start: (id: number) => api.post(`/listens/subscriptions/${id}/start`),
+  stop: (id: number) => api.post(`/listens/subscriptions/${id}/stop`),
+  delete: (id: number) => api.delete(`/listens/subscriptions/${id}`),
 }

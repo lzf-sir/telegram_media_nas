@@ -137,6 +137,7 @@ import { ref, reactive, onMounted } from 'vue'
 import { ElMessage } from 'element-plus'
 import { Lock } from '@element-plus/icons-vue'
 import { settingsApi, type TelegramSettings, type DownloadSettings, type BotSettings } from '@/api/settings'
+import { useAuthStore } from '@/stores/auth'
 
 const telegramSettings = reactive<TelegramSettings>({
   api_id: 0,
@@ -161,17 +162,29 @@ const savingBot = ref(false)
 
 async function loadSettings() {
   try {
-    const [telegram, download, bot] = await Promise.all([
+    const [telegram, download] = await Promise.all([
       settingsApi.getTelegramSettings(),
       settingsApi.getDownloadSettings(),
-      settingsApi.getBotSettings(),
     ])
     Object.assign(telegramSettings, telegram)
     Object.assign(downloadSettings, download)
-    Object.assign(botSettings, bot)
   } catch (error) {
     console.error('Failed to load settings:', error)
     ElMessage.error('加载设置失败')
+  }
+
+  // 单独加载 Bot 设置（需要身份验证）
+  const authStore = useAuthStore()
+  if (authStore.isAuthenticated) {
+    try {
+      const bot = await settingsApi.getBotSettings()
+      Object.assign(botSettings, bot)
+    } catch (error: any) {
+      // 如果是 401 错误，说明 token 过期，静默处理
+      if (error.response?.status !== 401) {
+        console.error('Failed to load bot settings:', error)
+      }
+    }
   }
 }
 
