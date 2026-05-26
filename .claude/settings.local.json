@@ -43,7 +43,8 @@
       "Bash(pip show *)",
       "Bash(curl -s http://localhost:8000/api/v1/tasks/)",
       "Bash(curl -s http://localhost:5173/api/v1/tasks/)",
-      "Bash(xargs grep -l \"var\\\\|--\")"
+      "Bash(xargs grep -l \"var\\\\|--\")",
+      "Bash(npx vite *)"
     ]
   }
 }

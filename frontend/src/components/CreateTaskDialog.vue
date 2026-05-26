@@ -149,7 +149,8 @@ const rules: FormRules = {
 async function loadFormats() {
   try {
     const response = await tasksApi.getFormats()
-    allFormats.value = response.by_media_type?.flat() || []
+    // by_media_type 是 Record<string, FileExtensionInfo[]>，需要先获取 Object.values
+    allFormats.value = Object.values(response.by_media_type || {}).flat() || []
   } catch (error) {
     console.error('加载格式列表失败:', error)
   }

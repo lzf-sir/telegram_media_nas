@@ -126,9 +126,14 @@ async def get_current_user(
     if payload is None:
         raise credentials_exception
 
-    # 获取 user_id
-    user_id: int = payload.get("sub")
-    if user_id is None:
+    # 获取 user_id (sub 是字符串，需要转为整数)
+    sub = payload.get("sub")
+    if sub is None:
+        raise credentials_exception
+
+    try:
+        user_id: int = int(sub)
+    except (ValueError, TypeError):
         raise credentials_exception
 
     # 查询用户

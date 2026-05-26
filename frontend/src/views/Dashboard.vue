@@ -1,49 +1,68 @@
 <template>
   <div class="dashboard-view">
-    <el-row :gutter="20">
-      <el-col :span="6">
-        <stat-card title="运行中" :value="runningTasks.length" icon="Loading" color="#409eff" />
-      </el-col>
-      <el-col :span="6">
-        <stat-card title="已完成" :value="completedTasks.length" icon="CircleCheck" color="#67c23a" />
-      </el-col>
-      <el-col :span="6">
-        <stat-card title="失败" :value="failedTasks.length" icon="CircleClose" color="#f56c6c" />
-      </el-col>
-      <el-col :span="6">
-        <stat-card title="总文件" :value="totalFiles" icon="Files" color="#e6a23c" />
-      </el-col>
-    </el-row>
+    <!-- 统计卡片 -->
+    <div class="stats-grid">
+      <stat-card
+        title="运行中"
+        :value="runningTasks.length"
+        icon="Loading"
+        variant="primary"
+      />
+      <stat-card
+        title="已完成"
+        :value="completedTasks.length"
+        icon="CircleCheck"
+        variant="success"
+      />
+      <stat-card
+        title="失败"
+        :value="failedTasks.length"
+        icon="CircleClose"
+        variant="danger"
+      />
+      <stat-card
+        title="总文件"
+        :value="totalFiles"
+        icon="Files"
+        variant="info"
+      />
+    </div>
 
-    <el-row :gutter="20" style="margin-top: 20px">
-      <el-col :span="16">
-        <el-card shadow="never">
-          <template #header>
-            <span>最近任务</span>
-          </template>
-          <task-list :tasks="recentTasks" :loading="loading" />
-        </el-card>
-      </el-col>
-      <el-col :span="8">
-        <el-card shadow="never">
-          <template #header>
-            <span>存储统计</span>
-          </template>
-          <stats-card :stats="stats" :loading="statsLoading" :compact="true" />
-        </el-card>
-      </el-col>
-    </el-row>
+    <!-- 内容区域 -->
+    <div class="content-grid">
+      <!-- 最近任务 -->
+      <div class="content-section glass-card">
+        <div class="section-header">
+          <h3 class="section-title">最近任务</h3>
+          <el-button type="primary" size="small" :icon="Plus" @click="goToTasks">
+            创建任务
+          </el-button>
+        </div>
+        <task-list :tasks="recentTasks" :loading="loading" @refresh="fetchData" />
+      </div>
+
+      <!-- 存储统计 -->
+      <div class="content-section glass-card">
+        <div class="section-header">
+          <h3 class="section-title">存储统计</h3>
+        </div>
+        <stats-card :stats="stats" :loading="statsLoading" :compact="true" />
+      </div>
+    </div>
   </div>
 </template>
 
 <script setup lang="ts">
 import { ref, computed, onMounted } from 'vue'
+import { useRouter } from 'vue-router'
+import { Plus } from '@element-plus/icons-vue'
 import { useTaskStore } from '@/stores/task'
 import { filesApi, type FileStats } from '@/api/files'
 import TaskList from '@/components/TaskList.vue'
 import StatsCard from '@/components/StatsCard.vue'
 import StatCard from '@/components/StatCard.vue'
 
+const router = useRouter()
 const taskStore = useTaskStore()
 
 const loading = ref(false)
@@ -72,6 +91,10 @@ async function fetchData() {
   }
 }
 
+function goToTasks() {
+  router.push({ name: 'Tasks' })
+}
+
 onMounted(() => {
   fetchData()
 })
@@ -81,6 +104,67 @@ onMounted(() => {
 .dashboard-view {
   display: flex;
   flex-direction: column;
-  gap: 20px;
+  gap: var(--space-lg);
+}
+
+/* ============================================
+   统计卡片网格
+   ============================================ */
+.stats-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
+  gap: var(--space-lg);
+}
+
+@media (max-width: 768px) {
+  .stats-grid {
+    grid-template-columns: repeat(2, 1fr);
+  }
+}
+
+@media (max-width: 480px) {
+  .stats-grid {
+    grid-template-columns: 1fr;
+  }
+}
+
+/* ============================================
+   内容网格
+   ============================================ */
+.content-grid {
+  display: grid;
+  grid-template-columns: 2fr 1fr;
+  gap: var(--space-lg);
+}
+
+@media (max-width: 1024px) {
+  .content-grid {
+    grid-template-columns: 1fr;
+  }
+}
+
+/* ============================================
+   内容区域
+   ============================================ */
+.content-section {
+  padding: var(--space-lg);
+  display: flex;
+  flex-direction: column;
+}
+
+.section-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: var(--space-lg);
+  padding-bottom: var(--space-md);
+  border-bottom: 1px solid var(--divider-color);
+}
+
+.section-title {
+  margin: 0;
+  font-size: 18px;
+  font-weight: 600;
+  color: var(--text-primary);
 }
 </style>

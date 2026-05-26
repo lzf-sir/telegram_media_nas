@@ -90,8 +90,8 @@ async def initialize_system(
 
     logger.info(f"系统初始化完成，管理员用户: {data.username}")
 
-    # 生成 token
-    access_token = create_access_token(data={"sub": user.id})
+    # 生成 token (sub 必须是字符串)
+    access_token = create_access_token(data={"sub": str(user.id)})
 
     return TokenResponse(
         access_token=access_token,
@@ -119,8 +119,8 @@ async def login(
             headers={"WWW-Authenticate": "Bearer"},
         )
 
-    # 生成 token
-    access_token = create_access_token(data={"sub": user.id})
+    # 生成 token (sub 必须是字符串)
+    access_token = create_access_token(data={"sub": str(user.id)})
 
     logger.info(f"用户登录成功: {user.username}")
 

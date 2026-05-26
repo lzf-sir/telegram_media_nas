@@ -21,6 +21,11 @@ router.beforeEach(async (to, from, next) => {
     await authStore.checkInitStatus()
   }
 
+  // 验证 token 是否有效（如果有 token）
+  if (authStore.token && !authStore.user) {
+    await authStore.fetchCurrentUser()
+  }
+
   const isAuthenticated = authStore.isAuthenticated
   const isPublicRoute = to.meta.public === true
   const requiresAuth = to.meta.requiresAuth === true

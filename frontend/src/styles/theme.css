@@ -1,0 +1,237 @@
+/* ============================================
+   Telegram Media NAS - 现代化主题系统
+   暗色玻璃拟态风格 + 双主题支持
+   ============================================ */
+
+:root {
+  /* 圆角系统 */
+  --radius-sm: 8px;
+  --radius-md: 12px;
+  --radius-lg: 16px;
+  --radius-xl: 24px;
+  --radius-2xl: 32px;
+  --radius-full: 9999px;
+
+  /* 间距系统 */
+  --space-xs: 4px;
+  --space-sm: 8px;
+  --space-md: 16px;
+  --space-lg: 24px;
+  --space-xl: 32px;
+  --space-2xl: 48px;
+  --space-3xl: 64px;
+
+  /* 过渡时长 */
+  --transition-fast: 150ms ease;
+  --transition-normal: 250ms ease;
+  --transition-slow: 350ms ease;
+  --transition-slower: 500ms ease;
+}
+
+/* ============================================
+   暗色主题（默认）
+   ============================================ */
+[data-theme='dark'] {
+  /* 背景渐变 */
+  --bg-gradient: linear-gradient(135deg, #1a1a2e 0%, #16213e 50%, #0f0f1a 100%);
+  --bg-gradient-subtle: linear-gradient(180deg, rgba(26, 26, 46, 0.8) 0%, rgba(15, 15, 26, 0.9) 100%);
+
+  /* 毛玻璃卡片 */
+  --glass-bg: rgba(255, 255, 255, 0.05);
+  --glass-bg-hover: rgba(255, 255, 255, 0.08);
+  --glass-border: rgba(255, 255, 255, 0.1);
+  --glass-shadow: 0 8px 32px rgba(0, 0, 0, 0.3);
+  --glass-blur: blur(20px);
+
+  /* 主色调 - 蓝色渐变 */
+  --primary-gradient: linear-gradient(135deg, #4facfe 0%, #00f2fe 100%);
+  --primary-color: #4facfe;
+  --primary-color-hover: #00f2fe;
+  --primary-bg: rgba(79, 172, 254, 0.15);
+  --primary-bg-hover: rgba(79, 172, 254, 0.25);
+
+  /* 成功色 - 绿色渐变 */
+  --success-gradient: linear-gradient(135deg, #43e97b 0%, #38f9d7 100%);
+  --success-color: #43e97b;
+  --success-color-hover: #38f9d7;
+  --success-bg: rgba(67, 233, 123, 0.15);
+  --success-bg-hover: rgba(67, 233, 123, 0.25);
+
+  /* 警告色 - 橙粉渐变 */
+  --warning-gradient: linear-gradient(135deg, #fa709a 0%, #fee140 100%);
+  --warning-color: #fa709a;
+  --warning-color-hover: #fee140;
+  --warning-bg: rgba(250, 112, 154, 0.15);
+  --warning-bg-hover: rgba(250, 112, 154, 0.25);
+
+  /* 危险色 - 红色渐变 */
+  --danger-gradient: linear-gradient(135deg, #ff6b6b 0%, #ee5a6f 100%);
+  --danger-color: #ff6b6b;
+  --danger-color-hover: #ee5a6f;
+  --danger-bg: rgba(255, 107, 107, 0.15);
+  --danger-bg-hover: rgba(255, 107, 107, 0.25);
+
+  /* 信息色 - 紫色渐变 */
+  --info-gradient: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  --info-color: #667eea;
+  --info-color-hover: #764ba2;
+  --info-bg: rgba(102, 126, 234, 0.15);
+  --info-bg-hover: rgba(102, 126, 234, 0.25);
+
+  /* 文字颜色 */
+  --text-primary: #ffffff;
+  --text-secondary: #a0aec0;
+  --text-tertiary: #718096;
+  --text-disabled: #4a5568;
+  --text-inverse: #1a202c;
+
+  /* 边框颜色 */
+  --border-color: rgba(255, 255, 255, 0.1);
+  --border-color-hover: rgba(255, 255, 255, 0.2);
+  --divider-color: rgba(255, 255, 255, 0.05);
+
+  /* 阴影 */
+  --shadow-xs: 0 2px 4px rgba(0, 0, 0, 0.2);
+  --shadow-sm: 0 2px 8px rgba(0, 0, 0, 0.25);
+  --shadow-md: 0 4px 16px rgba(0, 0, 0, 0.3);
+  --shadow-lg: 0 8px 32px rgba(0, 0, 0, 0.4);
+  --shadow-xl: 0 16px 48px rgba(0, 0, 0, 0.5);
+  --shadow-glow-primary: 0 0 40px rgba(79, 172, 254, 0.4);
+  --shadow-glow-success: 0 0 40px rgba(67, 233, 123, 0.4);
+  --shadow-glow-danger: 0 0 40px rgba(255, 107, 107, 0.4);
+
+  /* 侧边栏 */
+  --sidebar-bg: rgba(26, 26, 46, 0.6);
+  --sidebar-border: rgba(255, 255, 255, 0.08);
+  --sidebar-item-hover: rgba(255, 255, 255, 0.08);
+  --sidebar-item-active: var(--primary-bg);
+
+  /* 头部 */
+  --header-bg: rgba(26, 26, 46, 0.4);
+  --header-border: rgba(255, 255, 255, 0.08);
+
+  /* 输入框 */
+  --input-bg: rgba(255, 255, 255, 0.05);
+  --input-border: rgba(255, 255, 255, 0.1);
+  --input-focus-border: var(--primary-color);
+  --input-placeholder: var(--text-tertiary);
+
+  /* 滚动条 */
+  --scrollbar-bg: rgba(255, 255, 255, 0.05);
+  --scrollbar-thumb: rgba(255, 255, 255, 0.2);
+  --scrollbar-thumb-hover: rgba(255, 255, 255, 0.3);
+}
+
+/* ============================================
+   亮色主题
+   ============================================ */
+[data-theme='light'] {
+  /* 背景渐变 */
+  --bg-gradient: linear-gradient(135deg, #f0f4f8 0%, #e2e8f0 100%);
+  --bg-gradient-subtle: linear-gradient(180deg, rgba(240, 244, 248, 0.9) 0%, rgba(226, 232, 240, 0.95) 100%);
+
+  /* 毛玻璃卡片 */
+  --glass-bg: rgba(255, 255, 255, 0.7);
+  --glass-bg-hover: rgba(255, 255, 255, 0.85);
+  --glass-border: rgba(255, 255, 255, 0.5);
+  --glass-shadow: 0 8px 32px rgba(0, 0, 0, 0.08);
+  --glass-blur: blur(20px);
+
+  /* 主色调 - 紫色渐变 */
+  --primary-gradient: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  --primary-color: #667eea;
+  --primary-color-hover: #764ba2;
+  --primary-bg: rgba(102, 126, 234, 0.12);
+  --primary-bg-hover: rgba(102, 126, 234, 0.2);
+
+  /* 成功色 - 绿色渐变 */
+  --success-gradient: linear-gradient(135deg, #56ab2f 0%, #a8e063 100%);
+  --success-color: #56ab2f;
+  --success-color-hover: #a8e063;
+  --success-bg: rgba(86, 171, 47, 0.12);
+  --success-bg-hover: rgba(86, 171, 47, 0.2);
+
+  /* 警告色 - 橙色渐变 */
+  --warning-gradient: linear-gradient(135deg, #f093fb 0%, #f5576c 100%);
+  --warning-color: #f5576c;
+  --warning-color-hover: #f093fb;
+  --warning-bg: rgba(245, 87, 108, 0.12);
+  --warning-bg-hover: rgba(245, 87, 108, 0.2);
+
+  /* 危险色 - 红色渐变 */
+  --danger-gradient: linear-gradient(135deg, #eb3349 0%, #f45c43 100%);
+  --danger-color: #eb3349;
+  --danger-color-hover: #f45c43;
+  --danger-bg: rgba(235, 51, 73, 0.12);
+  --danger-bg-hover: rgba(235, 51, 73, 0.2);
+
+  /* 信息色 - 蓝色渐变 */
+  --info-gradient: linear-gradient(135deg, #4facfe 0%, #00f2fe 100%);
+  --info-color: #4facfe;
+  --info-color-hover: #00f2fe;
+  --info-bg: rgba(79, 172, 254, 0.12);
+  --info-bg-hover: rgba(79, 172, 254, 0.2);
+
+  /* 文字颜色 */
+  --text-primary: #1a202c;
+  --text-secondary: #4a5568;
+  --text-tertiary: #718096;
+  --text-disabled: #a0aec0;
+  --text-inverse: #ffffff;
+
+  /* 边框颜色 */
+  --border-color: rgba(0, 0, 0, 0.1);
+  --border-color-hover: rgba(0, 0, 0, 0.15);
+  --divider-color: rgba(0, 0, 0, 0.06);
+
+  /* 阴影 */
+  --shadow-xs: 0 2px 4px rgba(0, 0, 0, 0.04);
+  --shadow-sm: 0 2px 8px rgba(0, 0, 0, 0.06);
+  --shadow-md: 0 4px 16px rgba(0, 0, 0, 0.08);
+  --shadow-lg: 0 8px 32px rgba(0, 0, 0, 0.1);
+  --shadow-xl: 0 16px 48px rgba(0, 0, 0, 0.12);
+  --shadow-glow-primary: 0 0 40px rgba(102, 126, 234, 0.25);
+  --shadow-glow-success: 0 0 40px rgba(86, 171, 47, 0.25);
+  --shadow-glow-danger: 0 0 40px rgba(235, 51, 73, 0.25);
+
+  /* 侧边栏 */
+  --sidebar-bg: rgba(255, 255, 255, 0.7);
+  --sidebar-border: rgba(0, 0, 0, 0.08);
+  --sidebar-item-hover: rgba(0, 0, 0, 0.04);
+  --sidebar-item-active: var(--primary-bg);
+
+  /* 头部 */
+  --header-bg: rgba(255, 255, 255, 0.6);
+  --header-border: rgba(0, 0, 0, 0.08);
+
+  /* 输入框 */
+  --input-bg: rgba(255, 255, 255, 0.8);
+  --input-border: rgba(0, 0, 0, 0.15);
+  --input-focus-border: var(--primary-color);
+  --input-placeholder: var(--text-tertiary);
+
+  /* 滚动条 */
+  --scrollbar-bg: rgba(0, 0, 0, 0.05);
+  --scrollbar-thumb: rgba(0, 0, 0, 0.2);
+  --scrollbar-thumb-hover: rgba(0, 0, 0, 0.3);
+}
+
+/* ============================================
+   主题过渡动画
+   ============================================ */
+* {
+  transition-property: background-color, border-color, color, fill, stroke,
+    opacity, box-shadow, transform, filter, backdrop-filter;
+  transition-duration: var(--transition-normal);
+  transition-timing-function: ease;
+}
+
+/* 禁用过渡的元素 */
+.no-transition,
+*::before,
+*::after,
+input,
+textarea,
+select {
+  transition: none !important;
+}

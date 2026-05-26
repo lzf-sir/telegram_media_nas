@@ -1,69 +1,75 @@
 <template>
   <div class="files-view">
-    <el-card shadow="never">
-      <template #header>
-        <div class="card-header">
-          <span>文件管理</span>
-          <div class="header-actions">
-            <el-input
-              v-model="search"
-              placeholder="搜索文件"
-              :prefix-icon="Search"
-              clearable
-              style="width: 200px; margin-right: 10px"
-              @input="handleSearch"
-            />
-            <el-select
-              v-model="mediaTypeFilter"
-              placeholder="媒体类型"
-              clearable
-              style="width: 150px; margin-right: 10px"
-              @change="handleSearch"
-            >
-              <el-option label="音频" value="audio" />
-              <el-option label="视频" value="video" />
-              <el-option label="图片" value="photo" />
-              <el-option label="文档" value="document" />
-            </el-select>
-            <el-button
-              type="danger"
-              :icon="Delete"
-              :disabled="selectedFiles.length === 0"
-              @click="handleBatchDelete"
-            >
-              批量删除 ({{ selectedFiles.length }})
-            </el-button>
-          </div>
-        </div>
-      </template>
+    <div class="files-header">
+      <div class="header-left">
+        <h2 class="page-title-section">文件管理</h2>
+        <p class="page-subtitle">管理和搜索已下载的文件</p>
+      </div>
+      <div class="header-actions">
+        <el-input
+          v-model="search"
+          placeholder="搜索文件"
+          :prefix-icon="Search"
+          clearable
+          class="search-input"
+          @input="handleSearch"
+        />
+        <el-select
+          v-model="mediaTypeFilter"
+          placeholder="媒体类型"
+          clearable
+          class="filter-select"
+          @change="handleSearch"
+        >
+          <el-option label="音频" value="audio" />
+          <el-option label="视频" value="video" />
+          <el-option label="图片" value="photo" />
+          <el-option label="文档" value="document" />
+        </el-select>
+        <el-button
+          type="danger"
+          :icon="Delete"
+          :disabled="selectedFiles.length === 0"
+          @click="handleBatchDelete"
+        >
+          批量删除 ({{ selectedFiles.length }})
+        </el-button>
+      </div>
+    </div>
 
+    <div class="files-content glass-card">
       <el-table
         :data="files"
         v-loading="loading"
         @selection-change="handleSelectionChange"
+        class="files-table"
       >
         <el-table-column type="selection" width="55" />
-        <el-table-column label="文件名" prop="file_name" min-width="200">
+        <el-table-column label="文件名" prop="file_name" min-width="220">
           <template #default="{ row }">
             <div class="file-name">
-              <el-icon>
-                <component :is="getMediaTypeIcon(row.media_type)" />
-              </el-icon>
+              <div class="file-icon" :class="`icon-${row.media_type}`">
+                <el-icon>
+                  <component :is="getMediaTypeIcon(row.media_type)" />
+                </el-icon>
+              </div>
               <span>{{ row.file_name || '未命名' }}</span>
             </div>
           </template>
         </el-table-column>
-        <el-table-column label="大小" prop="file_size" width="100">
+        <el-table-column label="大小" prop="file_size" width="110">
           <template #default="{ row }">{{ formatBytes(row.file_size) }}</template>
         </el-table-column>
         <el-table-column label="类型" prop="media_type" width="100">
-          <template #default="{ row }">{{ row.media_type }}</template>
+          <template #default="{ row }">
+            <span class="media-type-badge">{{ getMediaTypeText(row.media_type) }}</span>
+          </template>
         </el-table-column>
-        <el-table-column label="聊天ID" prop="chat_id" width="150" show-overflow-tooltip />
-        <el-table-column label="下载时间" prop="downloaded_at" width="160">
+        <el-table-column label="聊天ID" prop="chat_id" width="140" show-overflow-tooltip />
+        <el-table-column label="下载时间" prop="downloaded_at" width="170">
           <template #default="{ row }">{{ formatDateTime(row.downloaded_at) }}</template>
         </el-table-column>
-        <el-table-column label="操作" width="100" fixed="right">
+        <el-table-column label="操作" width="80" fixed="right">
           <template #default="{ row }">
             <el-button
               type="danger"
@@ -76,17 +82,18 @@
         </el-table-column>
       </el-table>
 
-      <el-pagination
-        v-model:current-page="pagination.page"
-        v-model:page-size="pagination.pageSize"
-        :total="pagination.total"
-        :page-sizes="[20, 50, 100]"
-        layout="total, sizes, prev, pager, next, jumper"
-        @current-change="fetchFiles"
-        @size-change="fetchFiles"
-        style="margin-top: 20px; justify-content: flex-end"
-      />
-    </el-card>
+      <div class="pagination-wrapper">
+        <el-pagination
+          v-model:current-page="pagination.page"
+          v-model:page-size="pagination.pageSize"
+          :total="pagination.total"
+          :page-sizes="[20, 50, 100]"
+          layout="total, sizes, prev, pager, next, jumper"
+          @current-change="fetchFiles"
+          @size-change="fetchFiles"
+        />
+      </div>
+    </div>
 
     <stats-card :stats="stats" :loading="statsLoading" />
   </div>
@@ -188,6 +195,19 @@ async function handleBatchDelete() {
   }
 }
 
+function getMediaTypeText(type: string): string {
+  const texts: Record<string, string> = {
+    audio: '音频',
+    video: '视频',
+    photo: '图片',
+    document: '文档',
+    voice: '语音',
+    video_note: '视频留言',
+    animation: '动画',
+  }
+  return texts[type] || type
+}
+
 onMounted(() => {
   fetchFiles()
   fetchStats()
@@ -198,28 +218,169 @@ onMounted(() => {
 .files-view {
   display: flex;
   flex-direction: column;
-  gap: 20px;
+  gap: var(--space-lg);
 }
 
-.card-header {
+/* ============================================
+   头部样式
+   ============================================ */
+.files-header {
   display: flex;
   justify-content: space-between;
   align-items: center;
+  flex-wrap: wrap;
+  gap: var(--space-md);
+}
+
+.header-left {
+  flex: 1;
+}
+
+.page-title-section {
+  margin: 0 0 var(--space-xs) 0;
+  font-size: 24px;
+  font-weight: 700;
+  color: var(--text-primary);
+}
+
+.page-subtitle {
+  margin: 0;
+  font-size: 14px;
+  color: var(--text-secondary);
 }
 
 .header-actions {
   display: flex;
   align-items: center;
+  gap: var(--space-sm);
+  flex-wrap: wrap;
 }
 
+.search-input {
+  width: 200px;
+}
+
+.filter-select {
+  width: 140px;
+}
+
+/* ============================================
+   内容区域
+   ============================================ */
+.files-content {
+  padding: var(--space-lg);
+  min-height: 400px;
+}
+
+:deep(.files-table) {
+  --el-table-bg-color: transparent;
+  --el-table-tr-bg-color: transparent;
+  --el-table-header-bg-color: transparent;
+}
+
+:deep(.files-table .el-table__body-wrapper) {
+  background: transparent;
+}
+
+:deep(.files-table tr) {
+  background: transparent !important;
+}
+
+:deep(.files-table th.el-table__cell) {
+  background: transparent !important;
+  color: var(--text-secondary);
+  font-weight: 500;
+  border-bottom: 1px solid var(--divider-color);
+}
+
+:deep(.files-table td.el-table__cell) {
+  border-bottom: 1px solid var(--divider-color);
+}
+
+:deep(.files-table .el-table__row:hover td.el-table__cell) {
+  background: var(--sidebar-item-hover) !important;
+}
+
+/* 文件名 */
 .file-name {
   display: flex;
   align-items: center;
-  gap: 8px;
+  gap: var(--space-sm);
 }
 
-.file-name .el-icon {
-  font-size: 18px;
-  color: #909399;
+.file-icon {
+  width: 36px;
+  height: 36px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: var(--radius-sm);
+  font-size: 16px;
+}
+
+.file-icon.icon-audio {
+  background: var(--warning-bg);
+  color: var(--warning-color);
+}
+
+.file-icon.icon-video {
+  background: var(--danger-bg);
+  color: var(--danger-color);
+}
+
+.file-icon.icon-photo {
+  background: var(--success-bg);
+  color: var(--success-color);
+}
+
+.file-icon.icon-document {
+  background: var(--primary-bg);
+  color: var(--primary-color);
+}
+
+.file-icon.icon-voice {
+  background: var(--info-bg);
+  color: var(--info-color);
+}
+
+.media-type-badge {
+  padding: var(--space-xs) var(--space-sm);
+  background: var(--glass-bg);
+  border-radius: var(--radius-sm);
+  font-size: 12px;
+  color: var(--text-secondary);
+}
+
+/* 分页 */
+.pagination-wrapper {
+  display: flex;
+  justify-content: flex-end;
+  margin-top: var(--space-lg);
+  padding-top: var(--space-md);
+  border-top: 1px solid var(--divider-color);
+}
+
+/* ============================================
+   响应式设计
+   ============================================ */
+@media (max-width: 768px) {
+  .files-header {
+    flex-direction: column;
+    align-items: stretch;
+  }
+
+  .page-title-section {
+    font-size: 20px;
+  }
+
+  .header-actions {
+    flex-direction: column;
+    width: 100%;
+  }
+
+  .search-input,
+  .filter-select {
+    width: 100%;
+  }
 }
 </style>
