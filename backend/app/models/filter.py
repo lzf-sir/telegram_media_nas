@@ -1,9 +1,10 @@
 """
 Filter Rule Model - Advanced filtering system
 """
-from datetime import datetime
-from sqlalchemy import Column, Integer, String, DateTime, Boolean, JSON, Text
+from datetime import datetime, timezone
+from sqlalchemy import Column, Integer, String, DateTime, Boolean, JSON, Text, ForeignKey
 from sqlalchemy import Enum as SQLEnum
+from sqlalchemy.orm import relationship
 import enum
 
 from app.database import Base
@@ -42,7 +43,7 @@ class FilterCondition(Base):
     filter_group_id = Column(Integer, ForeignKey("filter_groups.id"), nullable=True)
 
     # Timestamps
-    created_at = Column(DateTime, default=datetime.utcnow, nullable=False)
+    created_at = Column(DateTime, default=lambda: datetime.now(timezone.utc), nullable=False)
 
 
 class FilterGroup(Base):
@@ -66,8 +67,8 @@ class FilterGroup(Base):
     is_preset = Column(Boolean, default=False)
 
     # Timestamps
-    created_at = Column(DateTime, default=datetime.utcnow, nullable=False)
-    updated_at = Column(DateTime, default=datetime.utcnow, onupdate=datetime.utcnow)
+    created_at = Column(DateTime, default=lambda: datetime.now(timezone.utc), nullable=False)
+    updated_at = Column(DateTime, default=lambda: datetime.now(timezone.utc), onupdate=lambda: datetime.now(timezone.utc))
 
     def to_dict(self):
         """Convert to dictionary"""

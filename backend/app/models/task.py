@@ -1,7 +1,7 @@
 """
 Download Task Model
 """
-from datetime import datetime
+from datetime import datetime, timezone
 from sqlalchemy import Column, Integer, String, DateTime, Enum as SQLEnum, JSON, Float
 from sqlalchemy.orm import relationship
 import enum
@@ -28,7 +28,7 @@ class DownloadTask(Base):
     id = Column(Integer, primary_key=True, index=True)
     chat_id = Column(String, nullable=False, index=True)
     chat_title = Column(String)
-    task_type = Column(SQLEnum(TaskType), default=TaskType.DOWNLOAD, nullable=False)
+    task_type = Column(SQLEnum(TaskType), default=TaskType.ONETIME, nullable=False)
     status = Column(SQLEnum(TaskStatus), default=TaskStatus.PENDING, nullable=False, index=True)
 
     # Progress tracking - 总体进度
@@ -62,10 +62,10 @@ class DownloadTask(Base):
     processed_ids = Column(JSON, default=list)  # 已处理的消息ID列表（用于去重验证）
 
     # Timestamps
-    created_at = Column(DateTime, default=datetime.utcnow, nullable=False)
+    created_at = Column(DateTime, default=lambda: datetime.now(timezone.utc), nullable=False)
     started_at = Column(DateTime, nullable=True)
     completed_at = Column(DateTime, nullable=True)
-    updated_at = Column(DateTime, default=datetime.utcnow, onupdate=datetime.utcnow)
+    updated_at = Column(DateTime, default=lambda: datetime.now(timezone.utc), onupdate=lambda: datetime.now(timezone.utc))
 
     # Relationships
     files = relationship("DownloadedFile", back_populates="task", cascade="all, delete-orphan")

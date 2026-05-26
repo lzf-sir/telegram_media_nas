@@ -3,7 +3,7 @@ Task Service - Business logic for download tasks
 """
 import asyncio
 import os
-from datetime import datetime
+from datetime import datetime, timezone
 from typing import Optional, List, Dict
 from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
@@ -85,7 +85,7 @@ class TaskService:
 
             # Update status
             task.status = TaskStatus.RUNNING
-            task.started_at = datetime.utcnow()
+            task.started_at = datetime.now(timezone.utc)
             await db.commit()
 
             try:
@@ -197,7 +197,7 @@ class TaskService:
                 task.downloaded_bytes = downloaded_bytes
                 task.total_bytes = total_bytes
                 task.total_count = success + failed + skipped
-                task.updated_at = datetime.utcnow()
+                task.updated_at = datetime.now(timezone.utc)
                 await db.commit()
 
         # Send WebSocket update

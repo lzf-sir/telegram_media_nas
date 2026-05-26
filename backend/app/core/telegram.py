@@ -4,6 +4,7 @@ Telegram Client Management with Fingerprint Isolation
 import asyncio
 import os
 import secrets
+from datetime import datetime, timezone
 from typing import Optional, Dict
 from loguru import logger
 import pyrogram
@@ -12,7 +13,7 @@ from pyrogram.types import Chat
 from pyrogram.enums import ParseMode
 
 from app.core.config import settings
-from app.models.account import TelegramAccount
+from app.models.account import TelegramAccount, AccountStatus
 
 
 class TelegramClientManager:
@@ -84,7 +85,7 @@ class TelegramClientManager:
             account.username = me.username
             account.first_name = me.first_name
             account.last_name = me.last_name
-            account.last_used_at = datetime.utcnow()
+            account.last_used_at = datetime.now(timezone.utc)
             account.status = AccountStatus.ACTIVE
             account.last_error = None
 

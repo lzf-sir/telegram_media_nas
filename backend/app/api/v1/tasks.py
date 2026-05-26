@@ -9,14 +9,12 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from app.database import get_db
 from app.models.task import DownloadTask, TaskStatus
 from app.models.file import DownloadedFile
-from app.models.user import User
 from app.schemas.task import (
     TaskCreate, TaskResponse, TaskUpdate,
     TaskDetailResponse, AvailableFormatsResponse,
     FileExtensionInfo, FILE_FORMATS_INFO
 )
 from app.services.task_service import TaskService
-from app.core.security import get_current_active_user
 from app.websocket.manager import manager
 
 router = APIRouter()
@@ -137,7 +135,7 @@ async def get_task_stats(
     # 获取格式统计
     format_result = await db.execute(
         select(
-            func.substr(DownloadedFile.file_name, funcInstr(DownloadedFile.file_name, '.')).label('ext'),
+            func.substr(DownloadedFile.file_name, func.instr(DownloadedFile.file_name, '.')).label('ext'),
             func.count(DownloadedFile.id).label('count')
         )
         .where(DownloadedFile.task_id == task_id)
@@ -283,7 +281,6 @@ async def get_task_files(
 async def pause_task(
     task_id: int,
     db: AsyncSession = Depends(get_db),
-    current_user: User = Depends(get_current_active_user)
 ):
     """
     暂停正在运行的任务
@@ -308,7 +305,6 @@ async def pause_task(
 async def resume_task(
     task_id: int,
     db: AsyncSession = Depends(get_db),
-    current_user: User = Depends(get_current_active_user)
 ):
     """
     恢复已暂停的任务

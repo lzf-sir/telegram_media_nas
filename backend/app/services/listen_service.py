@@ -3,6 +3,7 @@ Listen Service - Real-time message monitoring
 """
 import asyncio
 from typing import List, Optional
+from datetime import datetime, timezone
 from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
 from loguru import logger
@@ -152,7 +153,7 @@ class ListenService:
                 logger.error(f"Failed to forward message {message.id}: {e}")
 
         subscription.last_message_id = message.id
-        subscription.last_processed_at = datetime.utcnow()
+        subscription.last_processed_at = datetime.now(timezone.utc)
         await db.commit()
 
     def _get_media_type(self, message) -> Optional[str]:

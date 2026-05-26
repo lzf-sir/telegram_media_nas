@@ -1,7 +1,7 @@
 """
 Downloaded File Model
 """
-from datetime import datetime
+from datetime import datetime, timezone
 from sqlalchemy import Column, Integer, String, DateTime, BigInteger, ForeignKey, Text
 from sqlalchemy.orm import relationship
 
@@ -53,7 +53,7 @@ class DownloadedFile(Base):
     thumbnail_path = Column(String, nullable=True)
 
     # Timestamps
-    downloaded_at = Column(DateTime, default=datetime.utcnow, nullable=False, index=True)
+    downloaded_at = Column(DateTime, default=lambda: datetime.now(timezone.utc), nullable=False, index=True)
 
     # Relationships
     task = relationship("DownloadTask", back_populates="files")

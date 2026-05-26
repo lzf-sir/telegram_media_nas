@@ -1,6 +1,7 @@
 """
 项目通用枚举定义
 包含任务类型、文件格式等枚举
+"""
 import enum
 from typing import List, Dict
 

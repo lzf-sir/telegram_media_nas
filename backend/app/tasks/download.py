@@ -7,7 +7,7 @@ import time
 import tempfile
 import glob
 import asyncio
-from datetime import datetime
+from datetime import datetime, timezone
 from pathlib import Path
 from typing import Optional, List
 from loguru import logger
@@ -16,7 +16,6 @@ from sqlalchemy import select
 
 from app.models.task import DownloadTask, TaskStatus
 from app.models.file import DownloadedFile, MediaType
-from app.services.task_service import task_service
 from app.core.config import settings
 from app.core.telegram import telegram_manager
 
@@ -89,6 +88,9 @@ async def process_download_task(task: DownloadTask, db):
         task: The download task to process
         db: Database session
     """
+    # 延迟导入避免循环依赖
+    from app.api.v1.tasks import task_service
+
     logger.info(f"Starting download task {task.id} for chat {task.chat_id}")
 
     try:
@@ -253,7 +255,7 @@ async def process_download_task(task: DownloadTask, db):
         task.failed_count = failed_count
         task.skipped_count = skipped_count
         task.downloaded_bytes = downloaded_bytes
-        task.completed_at = datetime.utcnow()
+        task.completed_at = datetime.now(timezone.utc)
         # 完成时清除断点数据
         task.last_processed_id = None
         task.processed_ids = []

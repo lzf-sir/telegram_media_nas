@@ -3,6 +3,7 @@ Forward Service - Message forwarding
 """
 import asyncio
 from typing import List
+from datetime import datetime, timezone
 from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
 from loguru import logger
@@ -12,7 +13,6 @@ from app.models.task import TaskStatus
 from app.models.account import TelegramAccount
 from app.models.log import ActivityLog, LogLevel, LogType
 from app.core.telegram import telegram_manager
-from datetime import datetime
 
 
 class ForwardService:
@@ -64,7 +64,7 @@ class ForwardService:
             raise ValueError(f"Task {task_id} not found")
 
         task.status = TaskStatus.RUNNING
-        task.started_at = datetime.utcnow()
+        task.started_at = datetime.now(timezone.utc)
         await db.commit()
 
         # Run in background
@@ -130,7 +130,7 @@ class ForwardService:
 
             # Task complete
             task.status = TaskStatus.COMPLETED
-            task.completed_at = datetime.utcnow()
+            task.completed_at = datetime.now(timezone.utc)
             task.success_count = success_count
             task.failed_count = failed_count
             task.skipped_count = skipped_count

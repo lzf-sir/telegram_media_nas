@@ -2,6 +2,7 @@
 Logs API Routes
 """
 from typing import List, Optional
+from datetime import datetime, timezone, timedelta
 from fastapi import APIRouter, Depends, HTTPException, Query
 from sqlalchemy import select, desc, and_, or_
 from sqlalchemy.ext.asyncio import AsyncSession
@@ -115,10 +116,9 @@ async def delete_old_logs(
     db: AsyncSession = Depends(get_db),
 ):
     """Delete logs older than specified days"""
-    from datetime import timedelta
     from app.models.log import ActivityLog
 
-    cutoff_date = datetime.utcnow() - timedelta(days=days)
+    cutoff_date = datetime.now(timezone.utc) - timedelta(days=days)
 
     result = await db.execute(
         select(ActivityLog).where(ActivityLog.created_at < cutoff_date)

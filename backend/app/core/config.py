@@ -3,7 +3,7 @@ Application Configuration
 """
 from typing import List
 from pydantic_settings import BaseSettings
-from pydantic import Field, validator
+from pydantic import Field, field_validator
 import os
 
 
@@ -51,19 +51,22 @@ class Settings(BaseSettings):
     # JWT
     ACCESS_TOKEN_EXPIRE_MINUTES: int = Field(default=60 * 24 * 7)  # 7 days
 
-    @validator("FRONTEND_ORIGINS", pre=True)
+    @field_validator("FRONTEND_ORIGINS", mode="before")
+    @classmethod
     def parse_cors_origins(cls, v):
         if isinstance(v, str):
             return [origin.strip() for origin in v.split(",")]
         return v
 
-    @validator("DOWNLOAD_PATH", "TEMP_PATH", "SESSION_PATH", "pre=True)
+    @field_validator("DOWNLOAD_PATH", "TEMP_PATH", "SESSION_PATH", mode="before")
+    @classmethod
     def create_paths(cls, v):
         path = os.path.abspath(v)
         os.makedirs(path, exist_ok=True)
         return path
 
-    @validator("DATABASE_URL", pre=True)
+    @field_validator("DATABASE_URL", mode="before")
+    @classmethod
     def create_db_path(cls, v):
         """确保 SQLite 数据库目录存在"""
         if v.startswith("sqlite+aiosqlite:///"):

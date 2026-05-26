@@ -6,7 +6,12 @@
       "Bash(python -m venv --version)",
       "Bash(python3 -m venv --version)",
       "Bash(redis-cli ping *)",
-      "Bash(pip install *)"
+      "Bash(pip install *)",
+      "Bash(npm install *)",
+      "Bash(docker --version)",
+      "Bash(redis-server --version)",
+      "Bash(timeout 10 python -m uvicorn app.main:app --reload --host 0.0.0.0 --port 8000)",
+      "Bash(timeout 15 python -m uvicorn app.main:app --reload --host 0.0.0.0 --port 8000)"
     ]
   }
 }

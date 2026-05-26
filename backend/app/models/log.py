@@ -1,7 +1,7 @@
 """
 Activity Log Model
 """
-from datetime import datetime
+from datetime import datetime, timezone
 from sqlalchemy import Column, Integer, String, DateTime, Text, BigInteger
 from sqlalchemy import Enum as SQLEnum
 import enum
@@ -55,7 +55,7 @@ class ActivityLog(Base):
     stack_trace = Column(Text, nullable=True)
 
     # Timestamp
-    created_at = Column(DateTime, default=datetime.utcnow, nullable=False, index=True)
+    created_at = Column(DateTime, default=lambda: datetime.now(timezone.utc), nullable=False, index=True)
 
     def to_dict(self):
         """Convert to dictionary"""

@@ -99,7 +99,7 @@ class ConnectionManager:
             "downloaded_bytes": downloaded_bytes,
             "total_bytes": total_bytes,
             "current_file": current_file,
-            "progress": (current / total * 100) if total > 0 else 0,
+            "progress": round(current / total * 100, 2) if total and total > 0 else 0,
         }
         await self.send_task_update(task_id, message)
 

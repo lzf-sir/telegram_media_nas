@@ -14,7 +14,7 @@
     "element-plus": "^2.5.0",
     "@element-plus/icons-vue": "^2.3.0",
     "axios": "^1.6.0",
-    "vueuse": "^10.7.0",
+    "@vueuse/core": "^10.7.0",
     "date-fns": "^3.0.0"
   },
   "devDependencies": {

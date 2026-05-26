@@ -4,6 +4,7 @@ Account Service - Multi-account management with fingerprint isolation
 import os
 import secrets
 from typing import List, Optional
+from datetime import datetime, timezone
 from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
 from loguru import logger
@@ -11,7 +12,6 @@ from loguru import logger
 from app.models.account import TelegramAccount, AccountStatus
 from app.core.telegram import telegram_manager
 from app.core.config import settings
-from datetime import datetime
 
 
 class AccountService:
@@ -104,7 +104,7 @@ class AccountService:
             # Get client with account's fingerprint isolation
             client = await telegram_manager.get_client_by_account(account)
 
-            account.last_used_at = datetime.utcnow()
+            account.last_used_at = datetime.now(timezone.utc)
             await db.commit()
             logger.info(f"Activated account {account.phone} with isolated fingerprint")
 
