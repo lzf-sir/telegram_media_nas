@@ -60,7 +60,7 @@
           <!-- 格式分组快速选择 -->
           <div class="mb-2">
             <el-button
-              v-for="(formats, group) in FORMAT_GROUPS"
+              v-for="(_formats, group) in FORMAT_GROUPS"
               :key="group"
               size="small"
               :type="isGroupSelected(group) ? 'primary' : 'default'"
@@ -112,7 +112,7 @@
 </template>
 
 <script setup lang="ts">
-import { ref, reactive, computed, onMounted } from 'vue'
+import { ref, reactive, onMounted } from 'vue'
 import { ElMessage } from 'element-plus'
 import { QuestionFilled } from '@element-plus/icons-vue'
 import { useTaskStore } from '@/stores/task'
@@ -133,7 +133,7 @@ const allFormats = ref<FileExtensionInfo[]>([])
 const form = reactive<TaskCreate>({
   chat_id: '',
   chat_title: '',
-  task_type: 'onetime',
+  task_type: 'onetime' as any,
   media_types: [],
   excluded_extensions: [],
   included_extensions: [],
@@ -148,9 +148,9 @@ const rules: FormRules = {
 // 加载可用格式
 async function loadFormats() {
   try {
-    const response = await tasksApi.getFormats()
+    const response: any = await tasksApi.getFormats()
     // by_media_type 是 Record<string, FileExtensionInfo[]>，需要先获取 Object.values
-    allFormats.value = Object.values(response.by_media_type || {}).flat() || []
+    allFormats.value = (Object.values(response.by_media_type || {}).flat() || []) as FileExtensionInfo[]
   } catch (error) {
     console.error('加载格式列表失败:', error)
   }
@@ -216,7 +216,7 @@ async function handleSubmit() {
         chat_id: form.chat_id,
         chat_title: form.chat_title,
         task_type: form.task_type,
-        media_types: form.media_types.length > 0 ? form.media_types : undefined,
+        media_types: (form.media_types ?? []).length > 0 ? form.media_types : undefined,
         limit: form.limit,
         offset_id: form.offset_id,
         excluded_extensions: form.excluded_extensions,
@@ -237,7 +237,7 @@ function handleClose() {
   formRef.value?.resetFields()
   form.chat_id = ''
   form.chat_title = ''
-  form.task_type = 'onetime'
+  form.task_type = 'onetime' as any
   form.media_types = []
   form.limit = 0
   form.offset_id = 0

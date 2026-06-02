@@ -33,6 +33,7 @@ export interface ListenSubscriptionCreate {
 }
 
 export const listensApi = {
+  list: () => api.get<ListenSubscription[]>('/listens/subscriptions'),
   listSubscriptions: () => api.get<ListenSubscription[]>('/listens/subscriptions'),
   create: (data: ListenSubscriptionCreate) => api.post<ListenSubscription>('/listens/subscriptions', data),
   start: (id: number) => api.post(`/listens/subscriptions/${id}/start`),

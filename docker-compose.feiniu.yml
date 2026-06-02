@@ -1,0 +1,118 @@
+# ============================================================
+# Telegram Media NAS - 飞牛 NAS Docker Compose 部署配置
+# ============================================================
+# 使用方法：
+#   1. 复制 .env.example 为 .env 并填写你的 Telegram API 凭证
+#   2. 修改下方 volumes 中的路径为你的飞牛 NAS 实际存储路径
+#   3. 运行: docker-compose -f docker-compose.feiniu.yml up -d
+# ============================================================
+
+version: '3.8'
+
+services:
+  # ============================================================
+  # Redis - 缓存与消息队列
+  # ============================================================
+  redis:
+    image: redis:7-alpine
+    container_name: tg_nas_redis
+    command: redis-server --appendonly yes --maxmemory 256mb --maxmemory-policy allkeys-lru
+    volumes:
+      # Redis 持久化数据（可改为飞牛实际路径）
+      - ./nas-data/redis:/data
+    ports:
+      - "16379:6379"
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+    restart: unless-stopped
+    networks:
+      - tg_nas_network
+
+  # ============================================================
+  # 后端 API 服务 (FastAPI + Pyrogram)
+  # ============================================================
+  backend:
+    build:
+      context: ./backend
+      dockerfile: Dockerfile
+    container_name: tg_nas_backend
+    # 覆盖 Dockerfile 中的命令，生产模式去掉 --reload
+    command: uvicorn app.main:app --host 0.0.0.0 --port 8000
+    environment:
+      # 数据库（SQLite 文件存储，无需额外数据库服务）
+      DATABASE_URL: sqlite+aiosqlite:///app/data/telegram_media_nas.db
+      # Redis
+      REDIS_URL: redis://redis:6379/0
+      CELERY_BROKER_URL: redis://redis:6379/1
+      CELERY_RESULT_BACKEND: redis://redis:6379/1
+      # Telegram API 凭证（从 .env 文件读取）
+      TELEGRAM_API_ID: ${TELEGRAM_API_ID}
+      TELEGRAM_API_HASH: ${TELEGRAM_API_HASH}
+      TELEGRAM_PHONE: ${TELEGRAM_PHONE}
+      TELEGRAM_BOT_TOKEN: ${TELEGRAM_BOT_TOKEN:-}
+      # 路径配置
+      DOWNLOAD_PATH: /app/downloads
+      TEMP_PATH: /app/temp
+      SESSION_PATH: /app/sessions
+      # 运行模式
+      DEBUG: "false"
+      SECRET_KEY: ${SECRET_KEY:-change-this-secret-key-in-production}
+      # 下载限制
+      MAX_CONCURRENT_DOWNLOADS: ${MAX_CONCURRENT_DOWNLOADS:-3}
+      MAX_RETRIES: ${MAX_RETRIES:-3}
+      # CORS（飞牛 NAS 访问地址，根据实际情况修改）
+      FRONTEND_ORIGINS: ${FRONTEND_ORIGINS:-http://localhost:13500}
+    volumes:
+      # 代码目录（开发时可挂载，生产可注释掉使用镜像内置代码）
+      # - ./backend:/app
+      # SQLite 数据库持久化（修改为飞牛实际路径）
+      - ./nas-data/data:/app/data
+      # 下载文件存储（修改为飞牛实际路径，建议指向大容量存储卷）
+      - ./nas-data/downloads:/app/downloads
+      # Telegram 会话文件持久化（登录状态保存）
+      - ./nas-data/sessions:/app/sessions
+      # 临时文件目录
+      - ./nas-data/temp:/app/temp
+    ports:
+      - "18500:8000"
+    depends_on:
+      redis:
+        condition: service_healthy
+    restart: unless-stopped
+    networks:
+      - tg_nas_network
+    # 资源限制（NAS 性能有限，建议限制）
+    deploy:
+      resources:
+        limits:
+          memory: 512M
+        reservations:
+          memory: 256M
+
+  # ============================================================
+  # 前端 (Vue 3 + Nginx)
+  # ============================================================
+  frontend:
+    build:
+      context: ./frontend
+      dockerfile: Dockerfile
+    container_name: tg_nas_frontend
+    ports:
+      # 使用非标准端口，避免与飞牛及常见服务冲突
+      - "13500:80"
+    depends_on:
+      - backend
+    restart: unless-stopped
+    networks:
+      - tg_nas_network
+
+# ============================================================
+# 网络
+# ============================================================
+networks:
+  tg_nas_network:
+    driver: bridge
+    name: tg_nas_network

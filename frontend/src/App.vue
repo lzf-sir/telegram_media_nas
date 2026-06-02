@@ -12,7 +12,7 @@
       <!-- 路由视图 -->
       <div class="view-layer">
         <router-view v-slot="{ Component, route }">
-          <transition :name="route.meta.transition || 'page'" mode="out-in">
+          <transition :name="(route.meta.transition as string) || 'page'" mode="out-in">
             <keep-alive :include="['Dashboard', 'Tasks', 'Files', 'Forwards', 'Listens', 'Chats', 'Accounts', 'Logs', 'Settings']">
               <component :is="Component" :key="route.path" />
             </keep-alive>

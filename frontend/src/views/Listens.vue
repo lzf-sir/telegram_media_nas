@@ -63,7 +63,7 @@
       </el-table>
     </div>
 
-    <AddListenDialog v-model="showAdd" @added="fetchSubscriptions" />
+    <AddListenDialog v-model="showAdd" :accounts="accounts" @confirm="onAdded" />
   </div>
 </template>
 
@@ -72,10 +72,12 @@ import { ref, computed, onMounted } from 'vue'
 import { Plus, VideoPlay, VideoPause, Delete, Headset, Download, Share, ChatDotRound } from '@element-plus/icons-vue'
 import { ElMessage } from 'element-plus'
 import { listensApi, type ListenSubscription } from '@/api/listens'
+import { accountsApi, type TelegramAccount } from '@/api/accounts'
 import AddListenDialog from '@/components/AddListenDialog.vue'
 
 const loading = ref(false)
 const subscriptions = ref<ListenSubscription[]>([])
+const accounts = ref<TelegramAccount[]>([])
 const showAdd = ref(false)
 
 const activeCount = computed(() => subscriptions.value.filter(s => s.status === 'active').length)
@@ -83,12 +85,18 @@ const totalListened = computed(() => subscriptions.value.reduce((s, r) => s + (r
 const totalDownloaded = computed(() => subscriptions.value.reduce((s, r) => s + (r.total_downloaded || 0), 0))
 const totalForwarded = computed(() => subscriptions.value.reduce((s, r) => s + (r.total_forwarded || 0), 0))
 
+async function fetchAccounts() {
+  try { accounts.value = await accountsApi.list() as any }
+  catch { /* 静默处理 */ }
+}
+
 async function fetchSubscriptions() {
   loading.value = true
-  try { subscriptions.value = await listensApi.list() }
+  try { subscriptions.value = await listensApi.list() as any }
   catch { ElMessage.error('加载失败') }
   finally { loading.value = false }
 }
+function onAdded() { showAdd.value = false; fetchSubscriptions(); ElMessage.success('添加成功') }
 async function handleStop(row: ListenSubscription) {
   try { await listensApi.stop(row.id); fetchSubscriptions(); ElMessage.success('已停止') }
   catch { ElMessage.error('操作失败') }
@@ -102,7 +110,7 @@ async function handleDelete(row: ListenSubscription) {
   catch { ElMessage.error('删除失败') }
 }
 
-onMounted(fetchSubscriptions)
+onMounted(() => { fetchAccounts(); fetchSubscriptions() })
 </script>
 
 <style scoped>

@@ -97,7 +97,7 @@ const themeOpts = [
   { label: '☀️ 亮色', value: 'light' },
 ]
 
-const tg = reactive({ api_id: '', api_hash: '', phone: '', configured: false })
+const tg = reactive<{ api_id: string | number; api_hash: string; phone: string; configured: boolean }>({ api_id: '', api_hash: '', phone: '', configured: false })
 const dl = reactive({ download_path: '', temp_path: '', max_concurrent: 3 })
 
 function handleThemeChange(val: string | number) {
@@ -106,7 +106,7 @@ function handleThemeChange(val: string | number) {
 
 async function fetchSettings() {
   try {
-    const data = await settingsApi.getAll()
+    const data: any = await settingsApi.getAll()
     if (data.telegram) Object.assign(tg, data.telegram)
     if (data.download) Object.assign(dl, data.download)
   } catch { /* ignore */ }
@@ -114,7 +114,7 @@ async function fetchSettings() {
 
 async function saveTg() {
   try {
-    await settingsApi.updateTelegram({ api_id: tg.api_id, api_hash: tg.api_hash, phone: tg.phone })
+    await settingsApi.updateTelegram({ api_id: Number(tg.api_id), api_hash: tg.api_hash, phone: tg.phone })
     ElMessage.success('Telegram 设置已保存')
   } catch { ElMessage.error('保存失败') }
 }
@@ -127,7 +127,7 @@ async function testConnection() {
 }
 async function saveDl() {
   try {
-    await settingsApi.updateDownload(dl)
+    await settingsApi.updateDownload(dl as any)
     ElMessage.success('下载设置已保存')
   } catch { ElMessage.error('保存失败') }
 }

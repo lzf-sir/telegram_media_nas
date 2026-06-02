@@ -13,7 +13,7 @@ export interface TaskProgressMessage {
   total_bytes: number
   current_file?: string
   progress: number
-  success?: boolean
+  isSuccess?: boolean
   message?: string
 }
 

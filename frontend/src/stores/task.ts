@@ -22,7 +22,7 @@ export const useTaskStore = defineStore('task', () => {
   async function fetchTasks(params?: { status?: string; limit?: number }) {
     loading.value = true
     try {
-      tasks.value = await tasksApi.list(params)
+      tasks.value = await tasksApi.list(params) as any
     } catch (error) {
       console.error('Failed to fetch tasks:', error)
     } finally {
@@ -33,7 +33,7 @@ export const useTaskStore = defineStore('task', () => {
   async function fetchTask(id: number) {
     loading.value = true
     try {
-      currentTask.value = await tasksApi.get(id)
+      currentTask.value = await tasksApi.get(id) as any
       return currentTask.value
     } catch (error) {
       console.error('Failed to fetch task:', error)
@@ -44,7 +44,7 @@ export const useTaskStore = defineStore('task', () => {
 
   async function createTask(data: import('@/api/tasks').TaskCreate) {
     try {
-      const task = await tasksApi.create(data)
+      const task = await tasksApi.create(data) as any
       tasks.value.unshift(task)
       return task
     } catch (error) {
@@ -68,7 +68,7 @@ export const useTaskStore = defineStore('task', () => {
 
   async function retryTask(id: number) {
     try {
-      const newTask = await tasksApi.retry(id)
+      const newTask = await tasksApi.retry(id) as any
       tasks.value.unshift(newTask)
       return newTask
     } catch (error) {

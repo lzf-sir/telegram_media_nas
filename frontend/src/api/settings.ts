@@ -52,6 +52,22 @@ export const settingsApi = {
   getAllSettings: () =>
     api.get<Record<string, unknown>>('/settings/all'),
 
+  /** @deprecated 使用 getAllSettings */
+  getAll: () =>
+    api.get<{ telegram?: TelegramSettings; download?: DownloadSettings }>('/settings/all'),
+
+  /** @deprecated 使用 updateTelegramSettings */
+  updateTelegram: (data: Omit<TelegramSettings, 'configured'>) =>
+    api.put('/settings/telegram', data),
+
+  /** 测试 Telegram 连接 */
+  testTelegramConnection: () =>
+    api.post('/settings/telegram/test'),
+
+  /** @deprecated 使用 updateDownloadSettings */
+  updateDownload: (data: DownloadSettings) =>
+    api.put('/settings/download', data),
+
   getSetting: (key: string) =>
     api.get<{ key: string; value: string; value_type: string }>(`/settings/${key}`),
 

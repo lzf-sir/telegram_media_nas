@@ -37,7 +37,7 @@ export function getMediaTypeIcon(type: string): string {
 export function getTaskStatusType(status: string): 'success' | 'warning' | 'danger' | 'info' {
   const types: Record<string, 'success' | 'warning' | 'danger' | 'info'> = {
     completed: 'success',
-    running: 'primary',
+    running: 'success',
     pending: 'info',
     failed: 'danger',
     cancelled: 'warning',

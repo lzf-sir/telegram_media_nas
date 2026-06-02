@@ -66,7 +66,7 @@ const showSubscribe = ref(false)
 
 async function fetchSubscriptions() {
   loading.value = true
-  try { subscriptions.value = await chatsApi.listSubscriptions() }
+  try { subscriptions.value = await chatsApi.listSubscriptions() as any }
   catch { ElMessage.error('加载失败') }
   finally { loading.value = false }
 }

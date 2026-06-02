@@ -64,7 +64,7 @@ const showCreate = ref(false)
 
 async function fetchTasks() {
   loading.value = true
-  try { tasks.value = await forwardsApi.list() }
+  try { tasks.value = await forwardsApi.list() as any }
   catch { ElMessage.error('加载失败') }
   finally { loading.value = false }
 }

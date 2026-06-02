@@ -124,7 +124,7 @@ async function handleOpen() {
 async function loadDialogs() {
   loading.value = true
   try {
-    dialogs.value = await chatsApi.getDialogs(100)
+    dialogs.value = await chatsApi.getDialogs(100) as any
   } catch (error) {
     ElMessage.error('加载对话列表失败')
   } finally {
@@ -139,7 +139,7 @@ function handleSearch() {
 function handleSelectDialog(dialog: Dialog) {
   form.chat_id = dialog.id
   form.chat_title = dialog.title
-  form.chat_username = dialog.username || undefined
+  form.chat_username = dialog.username || ''
   form.chat_type = dialog.type
   activeTab.value = 'manual'
 }

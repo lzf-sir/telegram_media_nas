@@ -68,7 +68,7 @@ const showAdd = ref(false)
 
 async function fetchAccounts() {
   loading.value = true
-  try { accounts.value = await accountsApi.list() }
+  try { accounts.value = await accountsApi.list() as any }
   catch { ElMessage.error('加载失败') }
   finally { loading.value = false }
 }

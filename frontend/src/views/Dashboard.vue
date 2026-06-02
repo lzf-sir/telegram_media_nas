@@ -113,22 +113,22 @@
             <div class="stat-row">
               <span class="stat-dot" style="background: var(--accent)"></span>
               <span class="stat-key">图片</span>
-              <span class="stat-val font-mono">{{ fileStats?.photo_count ?? 0 }}</span>
+              <span class="stat-val font-mono">{{ fileStats?.by_media_type?.photo?.count ?? 0 }}</span>
             </div>
             <div class="stat-row">
               <span class="stat-dot" style="background: #3B82F6"></span>
               <span class="stat-key">视频</span>
-              <span class="stat-val font-mono">{{ fileStats?.video_count ?? 0 }}</span>
+              <span class="stat-val font-mono">{{ fileStats?.by_media_type?.video?.count ?? 0 }}</span>
             </div>
             <div class="stat-row">
               <span class="stat-dot" style="background: #8B5CF6"></span>
               <span class="stat-key">音频</span>
-              <span class="stat-val font-mono">{{ fileStats?.audio_count ?? 0 }}</span>
+              <span class="stat-val font-mono">{{ fileStats?.by_media_type?.audio?.count ?? 0 }}</span>
             </div>
             <div class="stat-row">
               <span class="stat-dot" style="background: #F59E0B"></span>
               <span class="stat-key">文档</span>
-              <span class="stat-val font-mono">{{ fileStats?.document_count ?? 0 }}</span>
+              <span class="stat-val font-mono">{{ fileStats?.by_media_type?.document?.count ?? 0 }}</span>
             </div>
             <div class="divider"></div>
             <div class="stat-row total-row">
@@ -180,7 +180,6 @@
 
 <script setup lang="ts">
 import { ref, computed, onMounted } from 'vue'
-import { useRouter } from 'vue-router'
 import {
   Loading, CircleCheck, CircleClose, Files, FolderOpened,
   Download, PieChart, Lightning, Plus, ChatDotRound,
@@ -190,11 +189,10 @@ import { useAuthStore } from '@/stores/auth'
 import { useTaskStore } from '@/stores/task'
 import { tasksApi } from '@/api/tasks'
 import { filesApi, type FileStats } from '@/api/files'
-import { formatBytes, formatDateTime } from '@/utils/format'
+import { formatBytes } from '@/utils/format'
 import { ElMessage } from 'element-plus'
 import TaskList from '@/components/TaskList.vue'
 
-const router = useRouter()
 const authStore = useAuthStore()
 const taskStore = useTaskStore()
 
@@ -226,7 +224,7 @@ async function fetchData() {
   try {
     await Promise.all([
       taskStore.fetchTasks({ limit: 10 }),
-      filesApi.getStats().then(d => fileStats.value = d),
+      filesApi.getStats().then((d: any) => fileStats.value = d),
     ])
   } finally {
     loading.value = false

@@ -38,10 +38,10 @@ async def get_db() -> AsyncSession:
 async def init_db():
     """Initialize database - create tables"""
     async with engine.begin() as conn:
-        # Import all models here to ensure they're registered
-        from app.models import task, file, chat, user, system_setting  # noqa
+        # 导入所有模型以确保它们在 Base.metadata 中注册
+        from app.models import task, file, chat, user, system_setting, account, forward, listen, log, filter  # noqa
         await conn.run_sync(Base.metadata.create_all)
-    logger.info("Database initialized successfully")
+    logger.info("数据库初始化完成")
 
 
 async def close_db():

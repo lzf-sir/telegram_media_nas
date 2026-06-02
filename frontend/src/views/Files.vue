@@ -106,22 +106,22 @@
       <div class="storage-item">
         <el-icon><Picture /></el-icon>
         <span>图片</span>
-        <strong class="font-mono">{{ stats.photo_count }}</strong>
+        <strong class="font-mono">{{ stats.by_media_type?.photo?.count ?? 0 }}</strong>
       </div>
       <div class="storage-item">
         <el-icon><VideoPlay /></el-icon>
         <span>视频</span>
-        <strong class="font-mono">{{ stats.video_count }}</strong>
+        <strong class="font-mono">{{ stats.by_media_type?.video?.count ?? 0 }}</strong>
       </div>
       <div class="storage-item">
         <el-icon><Headset /></el-icon>
         <span>音频</span>
-        <strong class="font-mono">{{ stats.audio_count }}</strong>
+        <strong class="font-mono">{{ stats.by_media_type?.audio?.count ?? 0 }}</strong>
       </div>
       <div class="storage-item">
         <el-icon><Document /></el-icon>
         <span>文档</span>
-        <strong class="font-mono">{{ stats.document_count }}</strong>
+        <strong class="font-mono">{{ stats.by_media_type?.document?.count ?? 0 }}</strong>
       </div>
       <div class="storage-item total">
         <el-icon><FolderOpened /></el-icon>
@@ -136,7 +136,6 @@
 import { ref, reactive, onMounted } from 'vue'
 import {
   Search, Delete, Picture, VideoPlay, Headset, Document, FolderOpened,
-  Files as FilesIcon,
 } from '@element-plus/icons-vue'
 import { ElMessage, ElMessageBox } from 'element-plus'
 import { filesApi, type FileItem, type FileStats } from '@/api/files'
@@ -157,20 +156,20 @@ const debouncedSearch = useDebounceFn(() => { pagination.page = 1; fetchFiles() 
 async function fetchFiles() {
   loading.value = true
   try {
-    const data = await filesApi.list({
+    const data: any = await filesApi.list({
       page: pagination.page,
       page_size: pagination.pageSize,
       search: search.value || undefined,
       media_type: mediaTypeFilter.value || undefined,
     })
-    files.value = data.items
-    pagination.total = data.total
+    files.value = data.files ?? data.items ?? []
+    pagination.total = data.total ?? 0
   } catch { ElMessage.error('加载文件列表失败') }
   finally { loading.value = false }
 }
 
 async function fetchStats() {
-  try { stats.value = await filesApi.getStats() }
+  try { stats.value = await filesApi.getStats() as any }
   catch { /* 静默处理 */ }
 }
 
