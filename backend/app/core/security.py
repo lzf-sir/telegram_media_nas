@@ -3,7 +3,7 @@
 """
 from datetime import datetime, timedelta, timezone
 from typing import Optional
-from passlib.context import CryptContext
+import bcrypt
 from jose import JWTError, jwt
 from fastapi import Depends, HTTPException, status
 from fastapi.security import HTTPBearer, HTTPAuthorizationCredentials
@@ -13,9 +13,6 @@ from loguru import logger
 from app.core.config import settings
 from app.database import AsyncSession, get_db
 from app.models.user import User
-
-# 密码哈希上下文
-pwd_context = CryptContext(schemes=["bcrypt"], deprecated="auto")
 
 # HTTP Bearer 认证
 security = HTTPBearer()
@@ -36,7 +33,10 @@ def verify_password(plain_password: str, hashed_password: str) -> bool:
     Returns:
         是否匹配
     """
-    return pwd_context.verify(plain_password, hashed_password)
+    return bcrypt.checkpw(
+        plain_password.encode('utf-8'),
+        hashed_password.encode('utf-8')
+    )
 
 
 def get_password_hash(password: str) -> str:
@@ -49,7 +49,9 @@ def get_password_hash(password: str) -> str:
     Returns:
         哈希后的密码
     """
-    return pwd_context.hash(password)
+    # bcrypt 限制密码最大 72 字节
+    password_bytes = password.encode('utf-8')[:72]
+    return bcrypt.hashpw(password_bytes, bcrypt.gensalt()).decode('utf-8')
 
 
 def create_access_token(data: dict, expires_delta: Optional[timedelta] = None) -> str:

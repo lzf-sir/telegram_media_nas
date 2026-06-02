@@ -1,123 +1,65 @@
 <template>
-  <div class="stat-card glass-card" :class="`stat-card-${variant}`">
-    <div class="stat-icon-wrapper" :style="{ background: gradientBg }">
-      <el-icon class="stat-icon">
-        <component :is="iconComponent" />
-      </el-icon>
+  <div class="stat-card glass-card" :class="[`stat-${variant}`, { interactive: !!clickable }]" @click="clickable && $emit('click')">
+    <div class="stat-icon-box" :style="{ background: `var(--${variant}-gradient)` }">
+      <el-icon :size="22" color="white"><component :is="icon" /></el-icon>
     </div>
-    <div class="stat-content">
-      <div class="stat-value">{{ value }}</div>
-      <div class="stat-label">{{ title }}</div>
+    <div class="stat-body">
+      <span class="stat-value font-mono">{{ displayValue }}</span>
+      <span class="stat-label">{{ title }}</span>
     </div>
-    <div class="stat-decoration" :style="{ background: gradientBg }"></div>
+    <div class="stat-bg-glow" :style="{ background: `var(--${variant}-gradient)` }"></div>
   </div>
 </template>
 
 <script setup lang="ts">
-import { computed, defineAsyncComponent } from 'vue'
+import { computed } from 'vue'
 
-const props = withDefaults(
-  defineProps<{
-    title: string
-    value: number
-    icon: string
-    color?: string
-    variant?: 'primary' | 'success' | 'warning' | 'danger' | 'info'
-  }>(),
-  {
-    variant: 'primary',
-  }
-)
-
-// Dynamic icon component
-const iconComponent = defineAsyncComponent(() => {
-  return import(`@element-plus/icons-vue`).then((mod) => mod[props.icon])
+const props = withDefaults(defineProps<{
+  title: string
+  value: string | number
+  icon: any
+  variant?: 'accent' | 'success' | 'warning' | 'danger' | 'info' | 'purple'
+  clickable?: boolean
+}>(), {
+  variant: 'accent',
+  clickable: false,
 })
 
-// 渐变背景
-const gradientBg = computed(() => {
-  const gradients = {
-    primary: 'var(--primary-gradient)',
-    success: 'var(--success-gradient)',
-    warning: 'var(--warning-gradient)',
-    danger: 'var(--danger-gradient)',
-    info: 'var(--info-gradient)',
+defineEmits<{ click: [] }>()
+
+const displayValue = computed(() => {
+  if (typeof props.value === 'number' && props.value >= 1000) {
+    return props.value.toLocaleString()
   }
-  return gradients[props.variant] || gradients.primary
+  return props.value
 })
 </script>
 
 <style scoped>
 .stat-card {
   position: relative;
-  overflow: hidden;
-  padding: var(--space-lg);
-  cursor: pointer;
-  transition: all var(--transition-normal);
-}
-
-.stat-card:hover {
-  transform: translateY(-4px);
-  box-shadow: var(--shadow-glow-primary);
-}
-
-.stat-card.stat-card-success:hover {
-  box-shadow: var(--shadow-glow-success);
-}
-
-.stat-card.stat-card-danger:hover {
-  box-shadow: var(--shadow-glow-danger);
-}
-
-.stat-icon-wrapper {
-  width: 56px;
-  height: 56px;
   display: flex;
   align-items: center;
-  justify-content: center;
+  gap: var(--space-4);
+  padding: var(--space-5);
+  overflow: hidden;
+  transition: all var(--transition-normal);
+}
+.stat-card.interactive { cursor: pointer; }
+.stat-card.interactive:hover { transform: translateY(-3px); box-shadow: var(--shadow-glow-sm); }
+.stat-icon-box {
+  width: 48px; height: 48px;
   border-radius: var(--radius-lg);
-  margin-bottom: var(--space-md);
+  display: flex; align-items: center; justify-content: center;
+  flex-shrink: 0;
 }
-
-.stat-icon-wrapper .stat-icon {
-  font-size: 28px;
-  color: #ffffff;
+.stat-body { display: flex; flex-direction: column; position: relative; z-index: 1; }
+.stat-value { font-size: 28px; font-weight: 700; color: var(--text-primary); line-height: 1; }
+.stat-label { font-size: 12px; color: var(--text-tertiary); margin-top: var(--space-1); }
+.stat-bg-glow {
+  position: absolute; right: -20px; bottom: -20px;
+  width: 80px; height: 80px; border-radius: 50%;
+  opacity: 0.08; filter: blur(30px);
 }
-
-.stat-content {
-  position: relative;
-  z-index: 1;
-}
-
-.stat-value {
-  font-size: 32px;
-  font-weight: 700;
-  line-height: 1;
-  color: var(--text-primary);
-  margin-bottom: var(--space-xs);
-}
-
-.stat-label {
-  font-size: 13px;
-  font-weight: 500;
-  color: var(--text-secondary);
-  text-transform: uppercase;
-  letter-spacing: 0.5px;
-}
-
-.stat-decoration {
-  position: absolute;
-  right: -20px;
-  top: -20px;
-  width: 100px;
-  height: 100px;
-  border-radius: 50%;
-  opacity: 0.1;
-  transition: all var(--transition-slow);
-}
-
-.stat-card:hover .stat-decoration {
-  transform: scale(1.5);
-  opacity: 0.15;
-}
+.font-mono { font-family: var(--font-mono); }
 </style>
