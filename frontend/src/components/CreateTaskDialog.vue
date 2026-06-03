@@ -11,6 +11,23 @@
         <el-input v-model="form.chat_id" placeholder="输入聊天ID或选择已有聊天" clearable />
       </el-form-item>
 
+      <!-- 收藏聊天快捷选择 -->
+      <el-form-item v-if="favorites.length > 0" label="快捷选择">
+        <div class="favorite-chips">
+          <el-tag
+            v-for="fav in favorites"
+            :key="fav.id"
+            :type="form.chat_id === fav.chat_id ? 'success' : 'info'"
+            effect="plain"
+            size="large"
+            @click="selectFavorite(fav)"
+            class="fav-chip"
+          >
+            {{ fav.chat_title || fav.chat_id }}
+          </el-tag>
+        </div>
+      </el-form-item>
+
       <!-- 聊天名称 -->
       <el-form-item label="聊天名称" prop="chat_title">
         <el-input v-model="form.chat_title" placeholder="可选，用于显示" clearable />
@@ -112,11 +129,12 @@
 </template>
 
 <script setup lang="ts">
-import { ref, reactive, onMounted } from 'vue'
+import { ref, reactive, onMounted, watch } from 'vue'
 import { ElMessage } from 'element-plus'
 import { QuestionFilled } from '@element-plus/icons-vue'
 import { useTaskStore } from '@/stores/task'
 import { tasksApi, FORMAT_GROUPS, type FileExtensionInfo, type TaskCreate } from '@/api/tasks'
+import { favoritesApi, type FavoriteChat } from '@/api/favorites'
 import type { FormInstance, FormRules } from 'element-plus'
 
 const taskStore = useTaskStore()
@@ -129,6 +147,18 @@ const submitting = ref(false)
 const formatFilterMode = ref<'include' | 'exclude'>('exclude')
 const selectedFormats = ref<Set<string>>(new Set())
 const allFormats = ref<FileExtensionInfo[]>([])
+
+// 收藏
+const favorites = ref<FavoriteChat[]>([])
+
+async function fetchFavorites() {
+  try { favorites.value = await favoritesApi.list() }
+  catch { /* ignore */ }
+}
+
+function selectFavorite(fav: FavoriteChat) {
+  form.chat_id = fav.chat_id
+}
 
 const form = reactive<TaskCreate>({
   chat_id: '',
@@ -253,6 +283,12 @@ const emit = defineEmits<{
 
 onMounted(() => {
   loadFormats()
+  fetchFavorites()
+})
+
+// 对话框打开时刷新收藏列表
+watch(visible, (val) => {
+  if (val) fetchFavorites()
 })
 </script>
 
@@ -293,4 +329,8 @@ onMounted(() => {
 .ml-1 {
   margin-left: 0.25rem;
 }
+
+.favorite-chips { display: flex; flex-wrap: wrap; gap: 8px; }
+.fav-chip { cursor: pointer; transition: transform .15s; }
+.fav-chip:hover { transform: scale(1.05); }
 </style>

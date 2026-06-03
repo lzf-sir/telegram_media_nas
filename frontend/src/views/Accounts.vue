@@ -9,7 +9,8 @@
     </div>
 
     <div class="accounts-content glass-card">
-      <el-table :data="accounts" v-loading="loading">
+      <el-empty v-if="!loading && accounts.length === 0" description="暂无账号，点击右上角添加" :image-size="120" />
+      <el-table v-else :data="accounts" v-loading="loading">
         <el-table-column label="状态" width="90">
           <template #default="{ row }">
             <span class="badge" :class="row.status === 'active' ? 'badge-success' : 'badge-warning'">

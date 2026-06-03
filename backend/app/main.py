@@ -6,7 +6,7 @@ from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 from loguru import logger
 
-from app.api.v1 import auth, tasks, files, chats, settings as settings_api, accounts, forwards, listens, logs
+from app.api.v1 import auth, tasks, files, chats, settings as settings_api, accounts, forwards, listens, logs, system, favorites
 from app.core.config import settings
 from app.database import init_db, close_db
 from app.websocket.manager import websocket_router
@@ -56,6 +56,8 @@ app.include_router(accounts.router, prefix="/api/v1/accounts", tags=["Accounts"]
 app.include_router(forwards.router, prefix="/api/v1/forwards", tags=["Forwards"])
 app.include_router(listens.router, prefix="/api/v1/listens", tags=["Listens"])
 app.include_router(logs.router, prefix="/api/v1/logs", tags=["Logs"])
+app.include_router(system.router, prefix="/api/v1/system", tags=["System"])
+app.include_router(favorites.router, prefix="/api/v1/favorites", tags=["Favorites"])
 
 # WebSocket router
 app.include_router(websocket_router)

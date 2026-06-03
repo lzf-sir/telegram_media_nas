@@ -175,10 +175,105 @@ class ListenService:
         return None
 
     async def _download_media(self, message, subscription):
-        """Download media from message"""
-        # Implementation similar to download_service
-        # TODO: Implement actual download logic
-        pass
+        """下载消息中的媒体文件，实现 MD5 去重"""
+        import os
+        import tempfile
+        import shutil
+        from datetime import datetime, timezone
+        from pathlib import Path
+        from app.tasks.download import calculate_md5, check_md5_exists, _get_file_extension
+
+        media_type = self._get_media_type(message)
+        if not media_type:
+            return None
+
+        # 获取文件信息
+        media_obj = getattr(message, media_type, None)
+        if not media_obj:
+            return None
+
+        file_size = getattr(media_obj, "file_size", 0)
+        file_name = getattr(media_obj, "file_name", None)
+        mime_type = getattr(media_obj, "mime_type", None)
+
+        # 生成目标路径
+        chat_title = message.chat.title if message.chat else str(message.chat.id)
+        safe_chat_title = "".join(c for c in chat_title if c.isalnum() or c in (' ', '-', '_'))
+        date_str = message.date.strftime("%Y_%m") if message.date else "unknown"
+        file_extension = _get_file_extension(media_type, mime_type, file_name)
+
+        if not file_name:
+            file_name = f"{message.id}_{media_type}{file_extension}"
+        elif not file_name.endswith(file_extension):
+            file_name = f"{file_name}{file_extension}"
+
+        download_dir = Path(settings.DOWNLOAD_PATH) / safe_chat_title / date_str / media_type
+        download_dir.mkdir(parents=True, exist_ok=True)
+
+        file_path = download_dir / file_name
+
+        # 如果目标文件已存在，跳过
+        if file_path.exists():
+            logger.info(f"文件已存在: {file_path}")
+            return None
+
+        temp_file = None
+        try:
+            # 下载到临时文件
+            with tempfile.NamedTemporaryFile(delete=False, dir=settings.TEMP_PATH) as tmp:
+                temp_file = tmp.name
+
+            # 使用消息自带的客户端直接下载（无需额外获取账号）
+            downloaded_path = await message.download(file_name=temp_file)
+
+            if not downloaded_path:
+                logger.warning(f"下载失败: {file_name}")
+                return None
+
+            # 计算 MD5 并去重
+            md5_hash = calculate_md5(temp_file)
+
+            # 需要独立的数据库会话来检查 MD5
+            from app.database import async_session_maker
+            async with async_session_maker() as db:
+                if await check_md5_exists(db, md5_hash):
+                    logger.info(f"文件 MD5 重复，跳过: {file_name}")
+                    os.unlink(temp_file)
+                    return None
+
+            # 移动到目标位置
+            shutil.move(temp_file, file_path)
+            logger.info(f"监听下载完成: {file_name} ({file_size} bytes)")
+
+            # 创建文件记录
+            file_record = DownloadedFile(
+                task_id=None,  # 监听下载不关联具体任务
+                message_id=message.id,
+                chat_id=str(message.chat.id),
+                file_name=file_name,
+                file_path=str(file_path),
+                file_size=file_size,
+                file_unique_id=getattr(media_obj, "file_unique_id", None),
+                mime_type=mime_type,
+                media_type=media_type,
+                duration=getattr(media_obj, "duration", None),
+                width=getattr(media_obj, "width", None),
+                height=getattr(media_obj, "height", None),
+                caption=message.caption or message.text,
+                md5_hash=md5_hash,
+            )
+            return file_record
+
+        except Exception as e:
+            logger.error(f"监听下载异常 {file_name}: {e}")
+            return None
+        finally:
+            # 清理临时文件
+            if temp_file and os.path.exists(temp_file):
+                try:
+                    os.unlink(temp_file)
+                except Exception:
+                    pass
 
     async def stop_listener(self, db: AsyncSession, subscription_id: int):
         """Stop a listener"""

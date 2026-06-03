@@ -86,8 +86,11 @@ class ConnectionManager:
         downloaded_bytes: int = 0,
         total_bytes: int = 0,
         current_file: str = None,
+        current_file_progress: float = 0.0,
+        download_speed: float = 0.0,
+        eta_seconds: int = 0,
     ):
-        """Send task progress update"""
+        """发送任务进度更新（含速度和 ETA）"""
         message = {
             "type": "progress",
             "task_id": task_id,
@@ -99,6 +102,9 @@ class ConnectionManager:
             "downloaded_bytes": downloaded_bytes,
             "total_bytes": total_bytes,
             "current_file": current_file,
+            "current_file_progress": current_file_progress,
+            "download_speed": round(download_speed, 2),
+            "eta_seconds": eta_seconds,
             "progress": round(current / total * 100, 2) if total and total > 0 else 0,
         }
         await self.send_task_update(task_id, message)
@@ -127,7 +133,13 @@ async def task_websocket(websocket: WebSocket, task_id: int):
         while True:
             # Keep connection alive and handle any incoming messages
             data = await websocket.receive_text()
-            # Handle client messages if needed (e.g., pause/resume commands)
+            try:
+                msg = json.loads(data)
+                # 响应心跳
+                if msg.get("type") == "ping":
+                    await websocket.send_json({"type": "pong"})
+            except json.JSONDecodeError:
+                pass
     except Exception as e:
         logger.warning(f"Task WebSocket error: {e}")
     finally:
@@ -141,6 +153,12 @@ async def notifications_websocket(websocket: WebSocket):
     try:
         while True:
             data = await websocket.receive_text()
+            try:
+                msg = json.loads(data)
+                if msg.get("type") == "ping":
+                    await websocket.send_json({"type": "pong"})
+            except json.JSONDecodeError:
+                pass
     except Exception as e:
         logger.warning(f"Notifications WebSocket error: {e}")
     finally:

@@ -180,8 +180,11 @@ class TaskService:
         downloaded_bytes: int = 0,
         total_bytes: int = 0,
         current_file: str = None,
+        current_file_progress: float = 0.0,
+        download_speed: float = 0.0,
+        eta_seconds: int = 0,
     ):
-        """Update task progress and notify via WebSocket"""
+        """更新任务进度并通过 WebSocket 通知（含速度和 ETA）"""
         from app.database import async_session_maker
 
         async with async_session_maker() as db:
@@ -191,16 +194,17 @@ class TaskService:
             task = result.scalar_one_or_none()
 
             if task:
-                task.success_count = success
-                task.failed_count = failed
+                task.success_count = success or task.success_count
+                task.failed_count = failed or task.failed_count
                 task.skipped_count = skipped
-                task.downloaded_bytes = downloaded_bytes
+                task.downloaded_bytes = downloaded_bytes or task.downloaded_bytes
                 task.total_bytes = total_bytes
-                task.total_count = success + failed + skipped
+                task.total_count = success + failed + skipped or task.total_count
+                task.current_file_progress = current_file_progress
                 task.updated_at = datetime.now(timezone.utc)
                 await db.commit()
 
-        # Send WebSocket update
+        # 发送 WebSocket 更新（含速度和 ETA）
         await manager.send_task_progress(
             task_id=task_id,
             status="running",
@@ -211,6 +215,9 @@ class TaskService:
             downloaded_bytes=downloaded_bytes,
             total_bytes=total_bytes,
             current_file=current_file,
+            current_file_progress=current_file_progress,
+            download_speed=download_speed,
+            eta_seconds=eta_seconds,
         )
 
     async def pause_task(self, task_id: int):

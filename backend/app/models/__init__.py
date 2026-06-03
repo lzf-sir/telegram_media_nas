@@ -10,6 +10,7 @@ from app.models.forward import ForwardTask
 from app.models.listen import ListenSubscription, ListenStatus
 from app.models.log import ActivityLog, LogLevel, LogType
 from app.models.filter import FilterGroup, FilterCondition, FilterOperator
+from app.models.favorite import FavoriteChat
 
 __all__ = [
     "DownloadTask",
@@ -31,4 +32,5 @@ __all__ = [
     "FilterGroup",
     "FilterCondition",
     "FilterOperator",
+    "FavoriteChat",
 ]

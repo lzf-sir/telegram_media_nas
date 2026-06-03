@@ -53,7 +53,7 @@
 <script setup lang="ts">
 import { ref, onMounted } from 'vue'
 import { Plus, CircleClose, RefreshRight, ChatDotRound, ChatLineRound } from '@element-plus/icons-vue'
-import { ElMessage } from 'element-plus'
+import { ElMessage, ElMessageBox } from 'element-plus'
 import { forwardsApi, type ForwardTask } from '@/api/forwards'
 import { formatDateTime } from '@/utils/format'
 import CreateForwardDialog from '@/components/CreateForwardDialog.vue'
@@ -70,12 +70,20 @@ async function fetchTasks() {
 }
 function onCreated() { showCreate.value = false; fetchTasks(); ElMessage.success('创建成功') }
 async function handleCancel(row: ForwardTask) {
-  try { await forwardsApi.cancel(row.id); fetchTasks(); ElMessage.success('已取消') }
-  catch { ElMessage.error('取消失败') }
+  try {
+    await ElMessageBox.confirm('确认取消此转发任务？', '取消确认', { type: 'warning' })
+    await forwardsApi.cancel(row.id)
+    fetchTasks()
+    ElMessage.success('已取消')
+  } catch { /* 取消 */ }
 }
 async function handleRetry(row: ForwardTask) {
-  try { await forwardsApi.retry(row.id); fetchTasks(); ElMessage.success('已重试') }
-  catch { ElMessage.error('重试失败') }
+  try {
+    await ElMessageBox.confirm('确认重试此转发任务？', '重试确认', { type: 'info' })
+    await forwardsApi.retry(row.id)
+    fetchTasks()
+    ElMessage.success('已重试')
+  } catch { /* 取消 */ }
 }
 function getStatusText(s: string) { const m: Record<string,string> = { running: '运行中', pending: '等待中', completed: '已完成', failed: '失败' }; return m[s] || s }
 function getStatusBadge(s: string) { const m: Record<string,string> = { running: 'success', completed: 'info', failed: 'danger', pending: 'warning' }; return m[s] || 'info' }

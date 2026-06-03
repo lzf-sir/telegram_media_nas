@@ -41,6 +41,18 @@
       <span class="file-name truncate">{{ task.current_file_name }}</span>
     </div>
 
+    <!-- 下载速度 & ETA -->
+    <div v-if="task.status === 'running' && (task.download_speed || task.current_file_progress > 0)" class="speed-eta">
+      <span class="speed-text">
+        <el-icon><Odometer /></el-icon>
+        {{ formatSpeed(task.download_speed || 0) }}
+      </span>
+      <span v-if="task.eta_seconds > 0" class="eta-text">
+        <el-icon><Clock /></el-icon>
+        剩余 {{ formatDuration(task.eta_seconds) }}
+      </span>
+    </div>
+
     <!-- 详情 -->
     <div class="card-details">
       <div class="detail">
@@ -59,7 +71,7 @@
 
 <script setup lang="ts">
 import { computed } from 'vue'
-import { VideoPause, VideoPlay, CircleClose, RefreshRight, Files, Download, Loading } from '@element-plus/icons-vue'
+import { VideoPause, VideoPlay, CircleClose, RefreshRight, Files, Download, Loading, Odometer, Clock } from '@element-plus/icons-vue'
 import type { Task } from '@/api/tasks'
 import { formatBytes } from '@/utils/format'
 
@@ -73,6 +85,20 @@ const progress = computed(() => {
 
 function getStatusText(s: string) { const m: Record<string,string> = { running:'运行中', pending:'等待中', completed:'已完成', failed:'失败', cancelled:'已取消', paused:'已暂停' }; return m[s]||s }
 function getStatusBadge(s: string) { const m: Record<string,string> = { running:'success', completed:'info', failed:'danger', pending:'warning', cancelled:'warning', paused:'warning' }; return m[s]||'info' }
+
+function formatSpeed(bytesPerSec: number): string {
+  if (!bytesPerSec || bytesPerSec <= 0) return '--'
+  if (bytesPerSec > 1024 * 1024) return `${(bytesPerSec / 1024 / 1024).toFixed(1)} MB/s`
+  if (bytesPerSec > 1024) return `${(bytesPerSec / 1024).toFixed(1)} KB/s`
+  return `${bytesPerSec.toFixed(1)} B/s`
+}
+function formatDuration(seconds: number): string {
+  if (seconds < 60) return `${seconds}秒`
+  if (seconds < 3600) return `${Math.floor(seconds / 60)}分${seconds % 60}秒`
+  const h = Math.floor(seconds / 3600)
+  const m = Math.floor((seconds % 3600) / 60)
+  return `${h}时${m}分`
+}
 </script>
 
 <style scoped>
@@ -131,4 +157,12 @@ function getStatusBadge(s: string) { const m: Record<string,string> = { running:
 .detail-key { width: 40px; color: var(--text-tertiary); flex-shrink: 0; }
 .detail-val { color: var(--text-primary); font-weight: 500; }
 .font-mono { font-family: var(--font-mono); }
+
+.speed-eta {
+  display: flex; gap: var(--space-4); font-size: 12px; color: var(--text-secondary);
+  padding-top: var(--space-1);
+}
+.speed-text, .eta-text { display: flex; align-items: center; gap: 4px; }
+.speed-text .el-icon { color: var(--info); }
+.eta-text .el-icon { color: var(--accent); }
 </style>

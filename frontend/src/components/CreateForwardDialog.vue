@@ -47,7 +47,7 @@ const props = defineProps<{
 
 const emit = defineEmits<{
   (e: 'update:modelValue', value: boolean): void
-  (e: 'confirm', value: ForwardForm): void
+  (e: 'created', value: ForwardForm): void
 }>()
 
 const visible = ref(false)
@@ -71,7 +71,7 @@ const handleClose = () => {
 }
 
 const handleConfirm = () => {
-  emit('confirm', form.value)
+  emit('created', form.value)
   handleClose()
 }
 </script>

@@ -56,13 +56,14 @@
 </template>
 
 <script setup lang="ts">
-import { ref, computed, onMounted } from 'vue'
+import { ref, computed, onMounted, onUnmounted, watch } from 'vue'
 import { Plus } from '@element-plus/icons-vue'
 import { ElMessage } from 'element-plus'
 import { useTaskStore } from '@/stores/task'
 import { tasksApi } from '@/api/tasks'
 import TaskList from '@/components/TaskList.vue'
 import CreateTaskDialog from '@/components/CreateTaskDialog.vue'
+import { useGlobalWebSocket } from '@/composables/useWebSocket'
 
 const taskStore = useTaskStore()
 const activeTab = ref('running')
@@ -112,7 +113,30 @@ async function handleResume(id: number) {
   catch (e: any) { ElMessage.error(e.response?.data?.detail || '恢复失败') }
 }
 
-onMounted(fetchTasks)
+// WebSocket 实时更新
+const { lastMessage, connect: wsConnect, disconnect: wsDisconnect } = useGlobalWebSocket()
+
+// 监听 WebSocket 消息，任务状态变化时自动刷新
+watch(lastMessage, (msg) => {
+  if (msg && (msg.type === 'complete' || msg.type === 'progress')) {
+    fetchTasks()
+  }
+})
+
+// 定期轮询作为 WebSocket 的补充（当 WS 不可用时保底）
+let pollTimer: ReturnType<typeof setInterval> | null = null
+
+onMounted(() => {
+  fetchTasks()
+  wsConnect()
+  // 每10秒轮询一次作为保底
+  pollTimer = setInterval(fetchTasks, 10000)
+})
+
+onUnmounted(() => {
+  wsDisconnect()
+  if (pollTimer) clearInterval(pollTimer)
+})
 </script>
 
 <style scoped>

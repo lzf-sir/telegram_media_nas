@@ -16,6 +16,7 @@ export interface DownloadSettings {
   max_concurrent_downloads: number
   download_timeout: number
   download_path: string
+  temp_path: string
 }
 
 /** Bot 安全设置 */

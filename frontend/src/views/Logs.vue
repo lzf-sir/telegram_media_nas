@@ -25,7 +25,8 @@
     </div>
 
     <div class="logs-content glass-card">
-      <el-table :data="logs" v-loading="loading">
+      <el-empty v-if="!loading && logs.length === 0" description="暂无日志记录" :image-size="120" />
+      <el-table v-else :data="logs" v-loading="loading">
         <el-table-column label="级别" width="80">
           <template #default="{ row }">
             <span class="badge" :class="`badge-${getLevelBadge(row.level)}`">{{ row.level?.toUpperCase() }}</span>

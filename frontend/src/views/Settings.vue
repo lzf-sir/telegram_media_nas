@@ -72,7 +72,7 @@
           </div>
           <div class="setting-row">
             <div class="setting-info"><span>最大并发</span><small>同时下载任务数</small></div>
-            <el-input-number v-model="dl.max_concurrent" :min="1" :max="20" />
+            <el-input-number v-model="dl.max_concurrent_downloads" :min="1" :max="20" />
           </div>
           <div class="setting-actions">
             <el-button type="primary" @click="saveDl">保存</el-button>
@@ -98,7 +98,7 @@ const themeOpts = [
 ]
 
 const tg = reactive<{ api_id: string | number; api_hash: string; phone: string; configured: boolean }>({ api_id: '', api_hash: '', phone: '', configured: false })
-const dl = reactive({ download_path: '', temp_path: '', max_concurrent: 3 })
+const dl = reactive({ download_path: '', temp_path: '', max_concurrent_downloads: 3, download_timeout: 300 })
 
 function handleThemeChange(val: string | number) {
   themeStore.setTheme(val as Theme)

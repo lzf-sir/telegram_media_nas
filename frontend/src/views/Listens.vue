@@ -70,7 +70,7 @@
 <script setup lang="ts">
 import { ref, computed, onMounted } from 'vue'
 import { Plus, VideoPlay, VideoPause, Delete, Headset, Download, Share, ChatDotRound } from '@element-plus/icons-vue'
-import { ElMessage } from 'element-plus'
+import { ElMessage, ElMessageBox } from 'element-plus'
 import { listensApi, type ListenSubscription } from '@/api/listens'
 import { accountsApi, type TelegramAccount } from '@/api/accounts'
 import AddListenDialog from '@/components/AddListenDialog.vue'
@@ -106,8 +106,12 @@ async function handleStart(row: ListenSubscription) {
   catch { ElMessage.error('操作失败') }
 }
 async function handleDelete(row: ListenSubscription) {
-  try { await listensApi.delete(row.id); fetchSubscriptions(); ElMessage.success('已删除') }
-  catch { ElMessage.error('删除失败') }
+  try {
+    await ElMessageBox.confirm('确认删除此监听规则？', '删除确认', { type: 'warning' })
+    await listensApi.delete(row.id)
+    fetchSubscriptions()
+    ElMessage.success('已删除')
+  } catch { /* 取消 */ }
 }
 
 onMounted(() => { fetchAccounts(); fetchSubscriptions() })

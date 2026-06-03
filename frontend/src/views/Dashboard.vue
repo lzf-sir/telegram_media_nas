@@ -172,6 +172,58 @@
             </div>
             <span>搜索文件</span>
           </button>
+          <button class="quick-action-btn" @click="showFavDialog = !showFavDialog">
+            <div class="qa-icon" style="background: var(--success-gradient)">
+              <el-icon><Star /></el-icon>
+            </div>
+            <span>{{ favoriteCount > 0 ? `${favoriteCount} 个收藏` : '管理收藏' }}</span>
+          </button>
+        </div>
+      </section>
+
+      <!-- 系统健康 -->
+      <section class="bento-card glass-card bento-health">
+        <div class="card-header">
+          <div class="card-header-left">
+            <el-icon :size="18"><Monitor /></el-icon>
+            <h3>系统健康</h3>
+          </div>
+          <el-button size="small" text type="primary" @click="fetchHealth">
+            <el-icon><Refresh /></el-icon>
+          </el-button>
+        </div>
+        <div class="card-body">
+          <div v-if="healthLoading" class="storage-loading">
+            <div class="skeleton" style="height:140px"></div>
+          </div>
+          <div v-else-if="healthData" class="health-grid">
+            <div class="health-item">
+              <span class="health-label">磁盘剩余</span>
+              <span class="health-value font-mono" :class="{ 'text-danger': healthData.disk?.downloads?.status === 'warning' }">
+                {{ healthData.disk?.downloads?.free_gb ?? '--' }} GB
+              </span>
+            </div>
+            <div class="health-item">
+              <span class="health-label">下载队列</span>
+              <span class="health-value font-mono">{{ healthData.queue?.running ?? 0 }}/{{ healthData.queue?.max_concurrent ?? 5 }}</span>
+            </div>
+            <div class="health-item">
+              <span class="health-label">活跃监听</span>
+              <span class="health-value font-mono">{{ healthData.listeners?.active ?? 0 }}</span>
+            </div>
+            <div class="health-item">
+              <span class="health-label">在线账号</span>
+              <span class="health-value font-mono">{{ healthData.accounts?.active ?? 0 }}</span>
+            </div>
+            <div class="health-item">
+              <span class="health-label">总文件数</span>
+              <span class="health-value font-mono">{{ healthData.storage?.total_files ?? 0 }}</span>
+            </div>
+            <div class="health-item">
+              <span class="health-label">今日完成</span>
+              <span class="health-value font-mono">{{ healthData.completed_today ?? 0 }}</span>
+            </div>
+          </div>
         </div>
       </section>
     </div>
@@ -179,11 +231,11 @@
 </template>
 
 <script setup lang="ts">
-import { ref, computed, onMounted } from 'vue'
+import { ref, computed, onMounted, onUnmounted, watch } from 'vue'
 import {
   Loading, CircleCheck, CircleClose, Files, FolderOpened,
   Download, PieChart, Lightning, Plus, ChatDotRound,
-  Bell, Search, ArrowRight,
+  Bell, Search, ArrowRight, Monitor, Refresh, Star,
 } from '@element-plus/icons-vue'
 import { useAuthStore } from '@/stores/auth'
 import { useTaskStore } from '@/stores/task'
@@ -192,6 +244,8 @@ import { filesApi, type FileStats } from '@/api/files'
 import { formatBytes } from '@/utils/format'
 import { ElMessage } from 'element-plus'
 import TaskList from '@/components/TaskList.vue'
+import { useGlobalWebSocket } from '@/composables/useWebSocket'
+import { favoritesApi } from '@/api/favorites'
 
 const authStore = useAuthStore()
 const taskStore = useTaskStore()
@@ -199,6 +253,38 @@ const taskStore = useTaskStore()
 const loading = ref(false)
 const statsLoading = ref(false)
 const fileStats = ref<FileStats | null>(null)
+
+// 系统健康
+interface HealthData {
+  disk?: { downloads?: { free_gb: number; status: string } }
+  queue?: { running: number; max_concurrent: number }
+  listeners?: { active: number }
+  accounts?: { active: number }
+  storage?: { total_files: number }
+  completed_today?: number
+}
+const healthData = ref<HealthData | null>(null)
+const healthLoading = ref(false)
+
+// 收藏
+const favoriteCount = ref(0)
+const showFavDialog = ref(false)
+
+async function fetchHealth() {
+  healthLoading.value = true
+  try {
+    const res = await fetch('/api/v1/system/health')
+    healthData.value = await res.json()
+  } catch { /* ignore */ }
+  finally { healthLoading.value = false }
+}
+
+async function fetchFavorites() {
+  try {
+    const favs = await favoritesApi.list()
+    favoriteCount.value = favs.length
+  } catch { /* ignore */ }
+}
 
 const runningCount = computed(() => taskStore.runningTasks.length)
 const completedCount = computed(() => taskStore.completedTasks.length)
@@ -225,6 +311,8 @@ async function fetchData() {
     await Promise.all([
       taskStore.fetchTasks({ limit: 10 }),
       filesApi.getStats().then((d: any) => fileStats.value = d),
+      fetchHealth(),
+      fetchFavorites(),
     ])
   } finally {
     loading.value = false
@@ -251,7 +339,24 @@ async function handleRetry(id: number) {
   }
 }
 
-onMounted(fetchData)
+// WebSocket 实时更新
+const { connected: wsConnected, lastMessage, connect: wsConnect, disconnect: wsDisconnect } = useGlobalWebSocket()
+
+watch(lastMessage, (msg) => {
+  if (msg && (msg.type === 'complete' || msg.type === 'progress')) {
+    // 任务状态变化时自动刷新数据
+    fetchData()
+  }
+})
+
+onMounted(() => {
+  fetchData()
+  wsConnect()
+})
+
+onUnmounted(() => {
+  wsDisconnect()
+})
 </script>
 
 <style scoped>
@@ -403,4 +508,18 @@ onMounted(fetchData)
 @media (max-width: 640px) {
   .kpi-grid { grid-template-columns: repeat(2, 1fr); }
 }
+
+/* 系统健康 */
+.bento-health { grid-row: span 1; }
+.health-grid {
+  display: grid; grid-template-columns: 1fr 1fr 1fr; gap: var(--space-3);
+}
+.health-item {
+  display: flex; flex-direction: column; gap: 2px;
+  padding: var(--space-2) var(--space-3);
+  background: var(--surface-2); border-radius: var(--radius-md);
+}
+.health-label { font-size: 12px; color: var(--text-tertiary); }
+.health-value { font-size: 18px; font-weight: 700; color: var(--text-primary); }
+.text-danger { color: var(--danger) !important; }
 </style>
