@@ -41,7 +41,7 @@ services:
       - sessions_data:/app/sessions
       - sqlite_data:/app/data  # SQLite 数据库持久化
     ports:
-      - "8000:8000"
+      - "8741:8741"
     depends_on:
       redis:
         condition: service_healthy
@@ -54,7 +54,7 @@ services:
       dockerfile: Dockerfile
     container_name: telegram_media_nas_frontend
     ports:
-      - "3000:80"
+      - "6742:80"
     depends_on:
       - backend
     restart: unless-stopped

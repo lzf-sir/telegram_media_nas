@@ -40,7 +40,7 @@ services:
       dockerfile: Dockerfile
     container_name: tg_nas_backend
     # 覆盖 Dockerfile 中的命令，生产模式去掉 --reload
-    command: uvicorn app.main:app --host 0.0.0.0 --port 8000
+    command: uvicorn app.main:app --host 0.0.0.0 --port 8741
     environment:
       # 数据库（SQLite 文件存储，无需额外数据库服务）
       DATABASE_URL: sqlite+aiosqlite:///app/data/telegram_media_nas.db
@@ -64,7 +64,7 @@ services:
       MAX_CONCURRENT_DOWNLOADS: ${MAX_CONCURRENT_DOWNLOADS:-3}
       MAX_RETRIES: ${MAX_RETRIES:-3}
       # CORS（飞牛 NAS 访问地址，根据实际情况修改）
-      FRONTEND_ORIGINS: ${FRONTEND_ORIGINS:-http://localhost:13500}
+      FRONTEND_ORIGINS: ${FRONTEND_ORIGINS:-http://localhost:16742}
     volumes:
       # 代码目录（开发时可挂载，生产可注释掉使用镜像内置代码）
       # - ./backend:/app
@@ -77,7 +77,7 @@ services:
       # 临时文件目录
       - ./nas-data/temp:/app/temp
     ports:
-      - "18500:8000"
+      - "18741:8741"
     depends_on:
       redis:
         condition: service_healthy
@@ -102,7 +102,7 @@ services:
     container_name: tg_nas_frontend
     ports:
       # 使用非标准端口，避免与飞牛及常见服务冲突
-      - "13500:80"
+      - "16742:80"
     depends_on:
       - backend
     restart: unless-stopped

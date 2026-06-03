@@ -25,7 +25,7 @@ export function useTaskWebSocket(taskId: number) {
 
   const connect = () => {
     const protocol = window.location.protocol === 'https:' ? 'wss:' : 'ws:'
-    const host = import.meta.env.DEV ? 'localhost:8000' : window.location.host
+    const host = import.meta.env.DEV ? 'localhost:8741' : window.location.host
     ws = new WebSocket(`${protocol}//${host}/ws/task/${taskId}`)
 
     ws.onopen = () => {
@@ -86,7 +86,7 @@ export function useNotificationsWebSocket() {
 
   const connect = () => {
     const protocol = window.location.protocol === 'https:' ? 'wss:' : 'ws:'
-    const host = import.meta.env.DEV ? 'localhost:8000' : window.location.host
+    const host = import.meta.env.DEV ? 'localhost:8741' : window.location.host
     ws = new WebSocket(`${protocol}//${host}/ws/notifications`)
 
     ws.onopen = () => {
@@ -140,7 +140,7 @@ export function useGlobalWebSocket() {
 
   const buildUrl = () => {
     const protocol = window.location.protocol === 'https:' ? 'wss:' : 'ws:'
-    const host = import.meta.env.DEV ? 'localhost:8000' : window.location.host
+    const host = import.meta.env.DEV ? 'localhost:8741' : window.location.host
     return `${protocol}//${host}/ws/notifications`
   }
 

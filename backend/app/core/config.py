@@ -41,7 +41,7 @@ class Settings(BaseSettings):
     CELERY_RESULT_BACKEND: str = Field(default="redis://redis:6379/1")
 
     # CORS
-    FRONTEND_ORIGINS: List[str] = Field(default=["http://localhost:5173", "http://localhost:3000"])
+    FRONTEND_ORIGINS: List[str] = Field(default=["http://localhost:5173", "http://localhost:6742"])
 
     # Download settings
     MAX_CONCURRENT_DOWNLOADS: int = Field(default=5)
