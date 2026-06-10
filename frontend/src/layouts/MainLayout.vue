@@ -467,32 +467,4 @@ onMounted(() => {
   opacity: 0;
 }
 
-/* ============================================
-   响应式设计
-   ============================================ */
-@media (max-width: 768px) {
-  .sidebar {
-    position: fixed;
-    left: 0;
-    top: 0;
-    height: 100%;
-    z-index: 1000;
-  }
-
-  .sidebar.collapsed {
-    transform: translateX(-100%);
-  }
-
-  .header {
-    padding: 0 var(--space-md);
-  }
-
-  .page-title {
-    font-size: 18px;
-  }
-
-  .main-content {
-    padding: var(--space-md);
-  }
-}
 </style>

@@ -116,17 +116,6 @@ onMounted(() => {
   gap: var(--space-lg);
 }
 
-@media (max-width: 768px) {
-  .stats-grid {
-    grid-template-columns: repeat(2, 1fr);
-  }
-}
-
-@media (max-width: 480px) {
-  .stats-grid {
-    grid-template-columns: 1fr;
-  }
-}
 
 /* ============================================
    内容网格
@@ -137,20 +126,7 @@ onMounted(() => {
   gap: var(--space-lg);
 }
 
-@media (max-width: 1024px) {
-  .content-grid {
-    grid-template-columns: 1fr;
-  }
-}
 
-/* ============================================
-   内容区域
-   ============================================ */
-.content-section {
-  padding: var(--space-lg);
-  display: flex;
-  flex-direction: column;
-}
 
 .section-header {
   display: flex;

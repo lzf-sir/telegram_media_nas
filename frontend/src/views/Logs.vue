@@ -116,7 +116,7 @@
 import { ref, reactive, onMounted } from 'vue'
 import { Refresh } from '@element-plus/icons-vue'
 import { logsApi, type ActivityLog } from '@/api/logs'
-import { formatDateTime } from '@/utils/format'
+import { formatDateTime, getLogTypeText } from '@/utils/format'
 import { ElMessage } from 'element-plus'
 
 const loading = ref(false)

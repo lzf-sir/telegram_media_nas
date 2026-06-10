@@ -296,21 +296,5 @@ async function handleLogin() {
   border-top: 1px solid var(--divider-color);
 }
 
-/* ============================================
-   响应式设计
-   ============================================ */
-@media (max-width: 480px) {
-  .login-card {
-    padding: var(--space-xl);
-    margin: var(--space-md);
-  }
 
-  .logo-title {
-    font-size: 20px;
-  }
-
-  .logo-subtitle {
-    font-size: 13px;
-  }
-}
 </style>
