@@ -22,7 +22,7 @@ export const useAuthStore = defineStore('auth', () => {
    */
   async function checkInitStatus() {
     try {
-      const result = await authApi.getInitStatus()
+      const result: any = await authApi.getInitStatus()
       isInitialized.value = result.initialized
     } catch (error) {
       console.error('Failed to check init status:', error)
@@ -37,7 +37,7 @@ export const useAuthStore = defineStore('auth', () => {
   async function initialize(data: InitRequest) {
     loading.value = true
     try {
-      const response = await authApi.init(data)
+      const response: any = await authApi.init(data)
 
       // 保存 token 和用户信息
       token.value = response.access_token
@@ -64,7 +64,7 @@ export const useAuthStore = defineStore('auth', () => {
   async function login(data: LoginRequest) {
     loading.value = true
     try {
-      const response = await authApi.login(data)
+      const response: any = await authApi.login(data)
 
       // 保存 token 和用户信息
       token.value = response.access_token
@@ -108,9 +108,9 @@ export const useAuthStore = defineStore('auth', () => {
     }
 
     try {
-      const currentUser = await authApi.me()
+      const currentUser: any = await authApi.me()
       user.value = currentUser
-      tokenUtil.saveToken(token.value, currentUser)
+      tokenUtil.saveToken(token.value!, currentUser)
       return true
     } catch (error) {
       // Token 可能已过期，清除本地状态

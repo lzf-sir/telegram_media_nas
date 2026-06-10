@@ -136,16 +136,35 @@ class TelegramBotManager:
                 )
                 return
 
-            # 触发下载任务
-            chat = message.chat
-            await message.reply_text(
-                f"📥 开始下载聊天 `{chat.title or chat.first_name}` 的媒体文件...\n\n"
-                "任务已创建，请稍候...",
-                quote=True
-            )
+            # 创建下载任务
+            from app.services.task_service import task_service
+            from app.schemas.task import TaskCreate
 
-            # 这里可以触发创建下载任务的逻辑
-            # TODO: 调用 task_service 创建任务
+            chat = message.chat
+            try:
+                task_data = TaskCreate(
+                    chat_id=str(chat.id),
+                    chat_title=chat.title or chat.first_name or str(chat.id),
+                    task_type="bot",
+                )
+                db = await self.get_db()
+                task = await task_service.create_task(db, task_data)
+                await task_service.start_task(task.id)
+
+                await message.reply_text(
+                    f"✅ 下载任务已创建！\n\n"
+                    f"📋 任务 ID: `{task.id}`\n"
+                    f"💬 聊天: {chat.title or chat.first_name}\n"
+                    f"📊 状态: 运行中\n\n"
+                    f"使用 /status 查看进度",
+                    quote=True
+                )
+            except Exception as e:
+                logger.error(f"创建 Bot 下载任务失败: {e}")
+                await message.reply_text(
+                    f"❌ 创建任务失败: {str(e)}",
+                    quote=True
+                )
 
         # /status - 状态命令（需要白名单验证）
         @self._bot_client.on_message(filters.command("status"))
@@ -161,11 +180,39 @@ class TelegramBotManager:
                 )
                 return
 
-            await message.reply_text(
-                "📊 当前任务状态：\n\n"
-                "暂无运行中的任务",
-                quote=True
-            )
+            # 查询运行中/暂停的任务
+            from sqlalchemy import select as sa_select
+            from app.models.task import DownloadTask as DT, TaskStatus as TS
+
+            db = await self.get_db()
+            try:
+                result = await db.execute(
+                    sa_select(DT).where(DT.status.in_([TS.RUNNING, TS.PAUSED, TS.PENDING]))
+                    .order_by(DT.created_at.desc()).limit(5)
+                )
+                tasks = result.scalars().all()
+
+                if not tasks:
+                    await message.reply_text("📊 当前没有运行中的任务", quote=True)
+                    return
+
+                status_lines = []
+                for t in tasks:
+                    status_emoji = {"running": "🟢", "paused": "🟡", "pending": "⏳"}
+                    emoji = status_emoji.get(t.status.value, "⚪")
+                    pct = (t.success_count / t.total_count * 100) if t.total_count > 0 else 0
+                    status_lines.append(
+                        f"{emoji} 任务 #{t.id} — {t.chat_title or t.chat_id}\n"
+                        f"   进度: {t.success_count}/{t.total_count} ({pct:.0f}%)"
+                    )
+
+                await message.reply_text(
+                    f"📊 任务状态\n\n" + "\n\n".join(status_lines),
+                    quote=True
+                )
+            except Exception as e:
+                logger.error(f"查询任务状态失败: {e}")
+                await message.reply_text(f"❌ 查询失败: {str(e)}", quote=True)
 
         # /cancel - 取消命令（需要白名单验证）
         @self._bot_client.on_message(filters.command("cancel"))
@@ -181,10 +228,35 @@ class TelegramBotManager:
                 )
                 return
 
-            await message.reply_text(
-                "❌ 当前没有可取消的任务",
-                quote=True
-            )
+            # 查询运行中的任务
+            from sqlalchemy import select as sa_select
+            from app.models.task import DownloadTask as DT, TaskStatus as TS
+            from app.services.task_service import task_service
+
+            db = await self.get_db()
+            try:
+                result = await db.execute(
+                    sa_select(DT).where(DT.status.in_([TS.RUNNING, TS.PENDING]))
+                    .order_by(DT.created_at.desc()).limit(5)
+                )
+                tasks = result.scalars().all()
+
+                if not tasks:
+                    await message.reply_text("❌ 当前没有可取消的任务", quote=True)
+                    return
+
+                cancelled = []
+                for t in tasks:
+                    await task_service.cancel_task(t.id)
+                    cancelled.append(f"#{t.id} — {t.chat_title or t.chat_id}")
+
+                await message.reply_text(
+                    f"✅ 已取消 {len(cancelled)} 个任务:\n" + "\n".join(cancelled),
+                    quote=True
+                )
+            except Exception as e:
+                logger.error(f"取消任务失败: {e}")
+                await message.reply_text(f"❌ 取消失败: {str(e)}", quote=True)
 
         # /help - 帮助命令
         @self._bot_client.on_message(filters.command("help"))
@@ -223,13 +295,38 @@ class TelegramBotManager:
                 return
 
             if message.forward_from:
-                await message.reply_text(
-                    f"📨 检测到转发消息\n"
-                    f"来自: {message.forward_from.first_name or message.forward_from.title or '未知'}\n"
-                    f"正在处理...",
-                    quote=True
-                )
-                # TODO: 创建下载任务处理转发消息的媒体
+                from app.services.task_service import task_service
+                from app.schemas.task import TaskCreate
+
+                source_info = message.forward_from
+                source_id = str(source_info.id)
+                source_title = source_info.first_name or source_info.title or source_id
+
+                try:
+                    db = await self.get_db()
+                    task_data = TaskCreate(
+                        chat_id=str(message.chat.id),
+                        chat_title=message.chat.title or message.chat.first_name or str(message.chat.id),
+                        task_type="bot",
+                    )
+                    task = await task_service.create_task(db, task_data)
+                    await task_service.start_task(task.id)
+
+                    await message.reply_text(
+                        f"📨 检测到转发消息\n"
+                        f"来自: {source_title}\n"
+                        f"✅ 已创建下载任务 (ID: {task.id})\n\n"
+                        f"使用 /status 查看进度",
+                        quote=True
+                    )
+                except Exception as e:
+                    logger.error(f"处理转发消息失败: {e}")
+                    await message.reply_text(
+                        f"📨 检测到转发消息\n"
+                        f"来自: {source_title}\n"
+                        f"❌ 创建任务失败: {str(e)}",
+                        quote=True
+                    )
 
     async def _set_commands(self):
         """设置 Bot 命令菜单"""

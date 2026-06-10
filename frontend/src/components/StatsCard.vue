@@ -1,107 +1,56 @@
 <template>
-  <el-row :gutter="20" class="stats-row">
-    <el-col :span="6">
-      <el-card shadow="hover">
-        <div class="stat-item">
-          <el-icon class="stat-icon files"><Files /></el-icon>
-          <div class="stat-content">
-            <div class="stat-value">{{ stats?.total_files || 0 }}</div>
-            <div class="stat-label">总文件数</div>
-          </div>
+  <div class="stats-card glass-card">
+    <div v-if="loading" class="loading-row">
+      <div class="skeleton" style="height:48px"></div>
+      <div class="skeleton" style="height:48px"></div>
+      <div class="skeleton" style="height:48px"></div>
+    </div>
+    <div v-else class="stats-row">
+      <div class="stat-cell">
+        <el-icon :size="20" color="var(--info)"><Files /></el-icon>
+        <div>
+          <span class="font-mono stat-num">{{ stats?.total_files ?? 0 }}</span>
+          <span class="stat-sub">总文件</span>
         </div>
-      </el-card>
-    </el-col>
-    <el-col :span="6">
-      <el-card shadow="hover">
-        <div class="stat-item">
-          <el-icon class="stat-icon size"><PieChart /></el-icon>
-          <div class="stat-content">
-            <div class="stat-value">{{ formatBytes(stats?.total_size || 0) }}</div>
-            <div class="stat-label">总大小</div>
-          </div>
+      </div>
+      <div class="stat-cell">
+        <el-icon :size="20" color="var(--accent)"><FolderOpened /></el-icon>
+        <div>
+          <span class="font-mono stat-num">{{ formatBytes(stats?.total_size ?? 0) }}</span>
+          <span class="stat-sub">总大小</span>
         </div>
-      </el-card>
-    </el-col>
-    <el-col :span="12">
-      <el-card shadow="hover">
-        <div class="stat-item inline">
-          <div class="media-types">
-            <div
-              v-for="(item, type) in stats?.by_media_type"
-              :key="type"
-              class="media-type-item"
-            >
-              <el-tag size="small">{{ type }}</el-tag>
-              <span>{{ item.count }} 个</span>
-            </div>
-          </div>
+      </div>
+      <div class="stat-cell types-cell">
+        <div v-for="(item, type) in stats?.by_media_type" :key="type" class="type-chip">
+          <el-tag size="small" round>{{ type }}</el-tag>
+          <span class="font-mono">{{ item.count }}</span>
         </div>
-      </el-card>
-    </el-col>
-  </el-row>
+      </div>
+    </div>
+  </div>
 </template>
 
 <script setup lang="ts">
-import { Files, PieChart } from '@element-plus/icons-vue'
+import { Files, FolderOpened } from '@element-plus/icons-vue'
 import { formatBytes } from '@/utils/format'
 import type { FileStats } from '@/api/files'
 
-defineProps<{
-  stats: FileStats | null
-  loading: boolean
-}>()
+defineProps<{ stats: FileStats | null; loading: boolean }>()
 </script>
 
 <style scoped>
-.stats-row {
-  margin-top: 0;
+.stats-card { padding: var(--space-4); }
+.loading-row { display: flex; gap: var(--space-4); }
+.stats-row { display: flex; gap: var(--space-4); flex-wrap: wrap; align-items: center; }
+.stat-cell {
+  display: flex; align-items: center; gap: var(--space-2);
+  padding: var(--space-2) var(--space-4);
+  background: var(--surface-2);
+  border-radius: var(--radius-md);
 }
-
-.stat-item {
-  display: flex;
-  align-items: center;
-  gap: 16px;
-}
-
-.stat-item.inline {
-  width: 100%;
-}
-
-.stat-icon {
-  font-size: 32px;
-  color: #409eff;
-}
-
-.stat-icon.size {
-  color: #67c23a;
-}
-
-.stat-content {
-  flex: 1;
-}
-
-.stat-value {
-  font-size: 24px;
-  font-weight: bold;
-  color: #303133;
-}
-
-.stat-label {
-  font-size: 14px;
-  color: #909399;
-}
-
-.media-types {
-  display: flex;
-  flex-wrap: wrap;
-  gap: 12px;
-  width: 100%;
-}
-
-.media-type-item {
-  display: flex;
-  align-items: center;
-  gap: 6px;
-  font-size: 14px;
-}
+.stat-num { font-size: 18px; font-weight: 700; color: var(--text-primary); }
+.stat-sub { font-size: 11px; color: var(--text-tertiary); margin-left: var(--space-1); }
+.types-cell { display: flex; gap: var(--space-2); flex-wrap: wrap; background: none; padding: 0; }
+.type-chip { display: flex; align-items: center; gap: var(--space-1); font-size: 12px; color: var(--text-secondary); }
+.font-mono { font-family: var(--font-mono); }
 </style>

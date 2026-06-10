@@ -1,118 +1,125 @@
 <template>
   <el-config-provider :locale="zhCn">
-    <div id="app" class="app-container">
-      <router-view />
+    <div id="app-root">
+      <!-- 全局背景层 -->
+      <div class="bg-layer">
+        <div class="bg-orb bg-orb-1"></div>
+        <div class="bg-orb bg-orb-2"></div>
+        <div class="bg-orb bg-orb-3"></div>
+        <div class="bg-grid"></div>
+      </div>
+
+      <!-- 路由视图 -->
+      <div class="view-layer">
+        <router-view v-slot="{ Component, route }">
+          <transition :name="(route.meta.transition as string) || 'page'" mode="out-in">
+            <keep-alive :include="['Dashboard', 'Tasks', 'Files', 'Forwards', 'Listens', 'Chats', 'Accounts', 'Logs', 'Settings']">
+              <component :is="Component" :key="route.path" />
+            </keep-alive>
+          </transition>
+        </router-view>
+      </div>
     </div>
   </el-config-provider>
 </template>
 
 <script setup lang="ts">
-import { provide, onMounted } from 'vue'
+import { onMounted } from 'vue'
 import zhCn from 'element-plus/es/locale/lang/zh-cn'
 import { useThemeStore } from '@/stores/theme'
 
 const themeStore = useThemeStore()
 
-provide('locale', zhCn)
-
-// 初始化主题
 onMounted(() => {
   themeStore.initTheme()
 })
 </script>
 
 <style>
+/* 导入设计系统 */
 @import '@/styles/theme.css';
 @import '@/styles/global.css';
 
-.app-container {
-  height: 100%;
-  width: 100%;
-  background: var(--bg-gradient);
+/* ── 根容器 ── */
+#app-root {
   position: relative;
+  height: 100vh;
+  width: 100vw;
+  overflow: hidden;
+  background: var(--surface-0);
+  color: var(--text-primary);
+  font-family: var(--font-body);
+}
+
+/* ── 背景层 ── */
+.bg-layer {
+  position: fixed;
+  inset: 0;
+  pointer-events: none;
+  z-index: 0;
   overflow: hidden;
 }
-
-/* 背景装饰元素 */
-.app-container::before {
-  content: '';
-  position: fixed;
-  top: -50%;
-  left: -50%;
-  width: 200%;
-  height: 200%;
-  background: radial-gradient(
-    circle at 20% 20%,
-    rgba(79, 172, 254, 0.08) 0%,
-    transparent 50%
-  );
-  pointer-events: none;
-  z-index: 0;
+.bg-grid {
+  position: absolute;
+  inset: 0;
+  background-image:
+    linear-gradient(var(--border-subtle) 1px, transparent 1px),
+    linear-gradient(90deg, var(--border-subtle) 1px, transparent 1px);
+  background-size: 64px 64px;
+  opacity: 0.4;
+}
+.bg-orb {
+  position: absolute;
+  border-radius: 50%;
+  filter: blur(120px);
+  opacity: 0.15;
+}
+.bg-orb-1 {
+  width: 600px;
+  height: 600px;
+  top: -200px;
+  left: -100px;
+  background: var(--accent);
+  animation: orb-float-1 20s ease-in-out infinite;
+}
+.bg-orb-2 {
+  width: 400px;
+  height: 400px;
+  bottom: -100px;
+  right: -50px;
+  background: #8B5CF6;
+  animation: orb-float-2 25s ease-in-out infinite;
+}
+.bg-orb-3 {
+  width: 300px;
+  height: 300px;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  background: #3B82F6;
+  animation: orb-float-3 18s ease-in-out infinite;
 }
 
-.app-container::after {
-  content: '';
-  position: fixed;
-  bottom: -50%;
-  right: -50%;
-  width: 200%;
-  height: 200%;
-  background: radial-gradient(
-    circle at 80% 80%,
-    rgba(118, 75, 162, 0.06) 0%,
-    transparent 50%
-  );
-  pointer-events: none;
-  z-index: 0;
+@keyframes orb-float-1 {
+  0%, 100% { transform: translate(0, 0) scale(1); }
+  33% { transform: translate(80px, 60px) scale(1.1); }
+  66% { transform: translate(-40px, -30px) scale(0.9); }
+}
+@keyframes orb-float-2 {
+  0%, 100% { transform: translate(0, 0) scale(1); }
+  33% { transform: translate(-60px, -50px) scale(1.15); }
+  66% { transform: translate(30px, 40px) scale(0.85); }
+}
+@keyframes orb-float-3 {
+  0%, 100% { transform: translate(-50%, -50%) scale(1); }
+  50% { transform: translate(-50%, -50%) scale(1.2); }
 }
 
-/* 确保内容在背景之上 */
-#app > div,
-#app > div > div {
+/* ── 视图层 ── */
+.view-layer {
   position: relative;
-  z-index: 1;
-}
-
-/* 页面过渡动画 */
-.page-enter-active,
-.page-leave-active {
-  transition: all var(--transition-slow);
-}
-
-.page-enter-from {
-  opacity: 0;
-  transform: translateY(20px);
-}
-
-.page-leave-to {
-  opacity: 0;
-  transform: translateY(-20px);
-}
-
-/* 淡入淡出过渡 */
-.fade-enter-active,
-.fade-leave-active {
-  transition: opacity var(--transition-normal);
-}
-
-.fade-enter-from,
-.fade-leave-to {
-  opacity: 0;
-}
-
-/* 滑动过渡 */
-.slide-enter-active,
-.slide-leave-active {
-  transition: all var(--transition-normal);
-}
-
-.slide-enter-from {
-  transform: translateX(-20px);
-  opacity: 0;
-}
-
-.slide-leave-to {
-  transform: translateX(20px);
-  opacity: 0;
+  z-index: var(--z-base);
+  height: 100%;
+  width: 100%;
 }
 </style>

@@ -3,6 +3,7 @@ Accounts API Routes
 """
 from typing import List
 from fastapi import APIRouter, Depends, HTTPException
+from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.database import get_db
@@ -98,8 +99,6 @@ async def set_default_account(
     db: AsyncSession = Depends(get_db),
 ):
     """Set an account as the default"""
-    from app.models.account import TelegramAccount
-
     # Remove default from all accounts
     result = await db.execute(select(TelegramAccount))
     for acc in result.scalars().all():

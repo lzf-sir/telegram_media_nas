@@ -1,68 +1,71 @@
 <template>
-  <div class="tasks-view">
-    <div class="tasks-header">
-      <div class="header-left">
-        <h2 class="page-title-section">下载任务</h2>
-        <p class="page-subtitle">管理您的媒体下载任务</p>
+  <div class="tasks-page">
+    <!-- 页头 -->
+    <div class="page-hero">
+      <div class="hero-left">
+        <h2 class="page-title">下载任务</h2>
+        <p class="page-desc">管理和监控所有媒体下载任务</p>
       </div>
-      <el-button type="primary" :icon="Plus" size="large" @click="showCreateDialog = true">
+      <el-button type="primary" size="large" :icon="Plus" @click="showCreateDialog = true">
         创建任务
       </el-button>
     </div>
 
+    <!-- 内容 -->
     <div class="tasks-content glass-card">
-      <el-tabs v-model="activeTab" @tab-change="handleTabChange" class="task-tabs">
-        <el-tab-pane label="进行中" name="running">
-          <task-list
-            :tasks="runningTasks"
-            :loading="loading"
-            @refresh="fetchTasks"
-            @pause="handlePause"
-            @resume="handleResume"
-            @cancel="handleCancel"
-            @retry="handleRetry"
-          />
+      <el-tabs v-model="activeTab" @tab-change="fetchTasks" class="tasks-tabs">
+        <el-tab-pane name="running">
+          <template #label>
+            <span class="tab-label">
+              进行中
+              <span class="tab-count">{{ runningTasks.length }}</span>
+            </span>
+          </template>
         </el-tab-pane>
-        <el-tab-pane label="已完成" name="completed">
-          <task-list
-            :tasks="completedTasks"
-            :loading="loading"
-            @refresh="fetchTasks"
-            @pause="handlePause"
-            @resume="handleResume"
-            @cancel="handleCancel"
-            @retry="handleRetry"
-          />
+        <el-tab-pane name="completed">
+          <template #label>
+            <span class="tab-label">
+              已完成
+              <span class="tab-count done">{{ completedTasks.length }}</span>
+            </span>
+          </template>
         </el-tab-pane>
-        <el-tab-pane label="失败" name="failed">
-          <task-list
-            :tasks="failedTasks"
-            :loading="loading"
-            @refresh="fetchTasks"
-            @pause="handlePause"
-            @resume="handleResume"
-            @cancel="handleCancel"
-            @retry="handleRetry"
-          />
+        <el-tab-pane name="failed">
+          <template #label">
+            <span class="tab-label">
+              失败
+              <span class="tab-count fail">{{ failedTasks.length }}</span>
+            </span>
+          </template>
         </el-tab-pane>
       </el-tabs>
+
+      <TaskList
+        :tasks="currentTasks"
+        :loading="loading"
+        @refresh="fetchTasks"
+        @cancel="handleCancel"
+        @retry="handleRetry"
+        @pause="handlePause"
+        @resume="handleResume"
+      />
     </div>
 
-    <create-task-dialog v-model="showCreateDialog" @created="handleTaskCreated" />
+    <CreateTaskDialog v-model="showCreateDialog" @created="onTaskCreated" />
   </div>
 </template>
 
 <script setup lang="ts">
-import { ref, computed, onMounted } from 'vue'
+import { ref, computed, onMounted, onUnmounted, watch } from 'vue'
 import { Plus } from '@element-plus/icons-vue'
 import { ElMessage } from 'element-plus'
 import { useTaskStore } from '@/stores/task'
 import { tasksApi } from '@/api/tasks'
 import TaskList from '@/components/TaskList.vue'
 import CreateTaskDialog from '@/components/CreateTaskDialog.vue'
+import { useGlobalWebSocket } from '@/composables/useWebSocket'
 
 const taskStore = useTaskStore()
-
 const activeTab = ref('running')
 const loading = ref(false)
 const showCreateDialog = ref(false)
@@ -71,148 +74,103 @@ const runningTasks = computed(() => taskStore.runningTasks)
 const completedTasks = computed(() => taskStore.completedTasks)
 const failedTasks = computed(() => taskStore.failedTasks)
 
+const currentTasks = computed(() => {
+  const map: Record<string, any[]> = {
+    running: runningTasks.value,
+    completed: completedTasks.value,
+    failed: failedTasks.value,
+  }
+  return map[activeTab.value] || []
+})
+
 async function fetchTasks() {
   loading.value = true
-  try {
-    await taskStore.fetchTasks({ limit: 50 })
-  } finally {
-    loading.value = false
-  }
+  try { await taskStore.fetchTasks({ limit: 50 }) }
+  finally { loading.value = false }
 }
 
-function handleTabChange() {
-  fetchTasks()
-}
-
-function handleTaskCreated() {
+function onTaskCreated() {
   showCreateDialog.value = false
+  activeTab.value = 'running'
   fetchTasks()
   ElMessage.success('任务创建成功')
 }
 
 async function handleCancel(id: number) {
-  try {
-    await tasksApi.cancel(id)
-    ElMessage.success('任务已取消')
-    fetchTasks()
-  } catch (error: any) {
-    ElMessage.error(error.response?.data?.detail || '取消失败')
-  }
+  try { await tasksApi.cancel(id); fetchTasks(); ElMessage.success('已取消') }
+  catch (e: any) { ElMessage.error(e.response?.data?.detail || '取消失败') }
 }
-
 async function handleRetry(id: number) {
-  try {
-    await tasksApi.retry(id)
-    ElMessage.success('任务已重新开始')
+  try { await tasksApi.retry(id); fetchTasks(); ElMessage.success('已重新发起') }
+  catch (e: any) { ElMessage.error(e.response?.data?.detail || '重试失败') }
+}
+async function handlePause(id: number) {
+  try { await tasksApi.pause(id); fetchTasks(); ElMessage.success('已暂停') }
+  catch (e: any) { ElMessage.error(e.response?.data?.detail || '暂停失败') }
+}
+async function handleResume(id: number) {
+  try { await tasksApi.resume(id); fetchTasks(); ElMessage.success('已恢复') }
+  catch (e: any) { ElMessage.error(e.response?.data?.detail || '恢复失败') }
+}
+
+// WebSocket 实时更新
+const { lastMessage, connect: wsConnect, disconnect: wsDisconnect } = useGlobalWebSocket()
+
+// 监听 WebSocket 消息，任务状态变化时自动刷新
+watch(lastMessage, (msg) => {
+  if (msg && (msg.type === 'complete' || msg.type === 'progress')) {
     fetchTasks()
-  } catch (error: any) {
-    ElMessage.error(error.response?.data?.detail || '重试失败')
   }
-}
+})
 
-function handlePause(id: number) {
-  // 事件由 TaskList 处理
-}
-
-function handleResume(id: number) {
-  // 事件由 TaskList 处理
-}
+// 定期轮询作为 WebSocket 的补充（当 WS 不可用时保底）
+let pollTimer: ReturnType<typeof setInterval> | null = null
 
 onMounted(() => {
   fetchTasks()
+  wsConnect()
+  // 每10秒轮询一次作为保底
+  pollTimer = setInterval(fetchTasks, 10000)
+})
+
+onUnmounted(() => {
+  wsDisconnect()
+  if (pollTimer) clearInterval(pollTimer)
 })
 </script>
 
 <style scoped>
-.tasks-view {
-  display: flex;
-  flex-direction: column;
-  gap: var(--space-lg);
+.tasks-page { display: flex; flex-direction: column; gap: var(--space-6); }
+.page-hero {
+  display: flex; align-items: flex-start; justify-content: space-between;
 }
-
-/* ============================================
-   头部样式
-   ============================================ */
-.tasks-header {
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  flex-wrap: wrap;
-  gap: var(--space-md);
-}
-
-.header-left {
-  flex: 1;
-}
-
-.page-title-section {
-  margin: 0 0 var(--space-xs) 0;
-  font-size: 24px;
-  font-weight: 700;
+.page-title {
+  font-family: var(--font-heading);
+  font-size: 24px; font-weight: 700;
   color: var(--text-primary);
 }
-
-.page-subtitle {
-  margin: 0;
+.page-desc {
+  color: var(--text-tertiary);
+  margin-top: var(--space-1);
   font-size: 14px;
-  color: var(--text-secondary);
 }
-
-/* ============================================
-   内容区域
-   ============================================ */
 .tasks-content {
-  padding: var(--space-lg);
-  min-height: 400px;
+  padding: var(--space-5);
+  flex: 1;
 }
-
-:deep(.task-tabs) {
+.tab-label {
   display: flex;
-  flex-direction: column;
-  height: 100%;
+  align-items: center;
+  gap: var(--space-2);
 }
-
-:deep(.task-tabs .el-tabs__header) {
-  margin: 0 0 var(--space-lg) 0;
-}
-
-:deep(.task-tabs .el-tabs__nav-wrap::after) {
-  display: none;
-}
-
-:deep(.task-tabs .el-tabs__item) {
-  padding: 0 var(--space-lg);
-  height: 44px;
-  line-height: 44px;
-  font-size: 15px;
-  font-weight: 500;
-}
-
-:deep(.task-tabs .el-tabs__active-bar) {
-  height: 3px;
+.tab-count {
+  font-family: var(--font-mono);
+  font-size: 11px;
+  padding: 1px 7px;
   border-radius: var(--radius-full);
+  background: var(--success-soft);
+  color: var(--accent);
 }
-
-:deep(.task-tabs .el-tab-pane) {
-  display: flex;
-  flex-direction: column;
-}
-
-/* ============================================
-   响应式设计
-   ============================================ */
-@media (max-width: 640px) {
-  .tasks-header {
-    flex-direction: column;
-    align-items: stretch;
-  }
-
-  .page-title-section {
-    font-size: 20px;
-  }
-
-  .tasks-header .el-button {
-    width: 100%;
-  }
-}
+.tab-count.done { background: var(--info-soft); color: var(--info); }
+.tab-count.fail { background: var(--danger-soft); color: var(--danger); }
 </style>

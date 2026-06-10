@@ -1,14 +1,16 @@
 """
 Files API Routes
 """
+import os
+import mimetypes
 from typing import List, Optional
 from fastapi import APIRouter, Depends, HTTPException, Query
+from fastapi.responses import FileResponse, Response
 from sqlalchemy import select, and_, or_, func, desc
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.database import get_db
 from app.models.file import DownloadedFile
-from app.models.chat import ChatSubscription
 from app.schemas.file import FileResponse, FileListResponse, FileStats
 
 router = APIRouter()
@@ -200,3 +202,62 @@ async def delete_files_batch(
         "deleted_count": deleted_count,
         "errors": errors,
     }
+
+
+@router.get("/{file_id}/preview")
+async def preview_file(
+    file_id: int,
+    db: AsyncSession = Depends(get_db),
+):
+    """预览文件（图片直接显示，视频返回信息）"""
+    result = await db.execute(select(DownloadedFile).where(DownloadedFile.id == file_id))
+    file = result.scalar_one_or_none()
+
+    if not file:
+        raise HTTPException(status_code=404, detail="File not found")
+
+    if not os.path.exists(file.file_path):
+        raise HTTPException(status_code=404, detail="File not found on disk")
+
+    # 图片类型直接返回文件
+    if file.media_type == "photo" or (file.mime_type and file.mime_type.startswith("image/")):
+        mime_type, _ = mimetypes.guess_type(file.file_path)
+        return FileResponse(
+            file.file_path,
+            media_type=mime_type or "image/jpeg",
+            filename=file.file_name,
+        )
+
+    # 非图片返回信息
+    return {
+        "id": file.id,
+        "file_name": file.file_name,
+        "media_type": file.media_type,
+        "mime_type": file.mime_type,
+        "file_size": file.file_size,
+        "preview_available": False,
+    }
+
+
+@router.get("/{file_id}/thumbnail")
+async def get_thumbnail(
+    file_id: int,
+    db: AsyncSession = Depends(get_db),
+):
+    """获取文件缩略图（图片直接返回，其他返回 204）"""
+    result = await db.execute(select(DownloadedFile).where(DownloadedFile.id == file_id))
+    file = result.scalar_one_or_none()
+
+    if not file:
+        raise HTTPException(status_code=404, detail="File not found")
+
+    if not os.path.exists(file.file_path):
+        raise HTTPException(status_code=404, detail="File not found on disk")
+
+    # 图片类型直接返回文件作为缩略图
+    if file.media_type == "photo" or (file.mime_type and file.mime_type.startswith("image/")):
+        mime_type, _ = mimetypes.guess_type(file.file_path)
+        return FileResponse(file.file_path, media_type=mime_type or "image/jpeg")
+
+    # 非图片返回 204（前端显示图标）
+    return Response(status_code=204)

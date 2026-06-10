@@ -367,10 +367,12 @@ async def download_media_from_message(
 
         start_time = time.time()
         last_progress_update = start_time
+        last_bytes = 0
+        current_speed = 0.0  # 当前下载速度 (bytes/s)
 
         def progress_callback(current, total):
-            """下载进度回调 - 更新任务进度"""
-            nonlocal last_progress_update
+            """下载进度回调 - 更新任务进度（含速度计算）"""
+            nonlocal last_progress_update, last_bytes, current_speed
 
             # 更新当前文件进度
             if total > 0:
@@ -380,12 +382,26 @@ async def download_media_from_message(
                 # 每秒更新一次数据库，避免频繁写入
                 now = time.time()
                 if now - last_progress_update >= 1.0:
+                    # 计算下载速度 (bytes/s)
+                    delta_time = now - last_progress_update
+                    delta_bytes = current - last_bytes
+                    if delta_time > 0:
+                        current_speed = delta_bytes / delta_time
+
+                    # 计算预计剩余时间
+                    remaining_bytes = total - current
+                    eta = remaining_bytes / current_speed if current_speed > 0 else 0
+
                     last_progress_update = now
+                    last_bytes = current
+
                     # 异步更新进度（不等待）
                     asyncio.create_task(task_service.update_progress(
                         task_id=task.id,
                         current_file=file_name,
                         current_file_progress=progress,
+                        download_speed=current_speed,
+                        eta_seconds=int(eta),
                     ))
 
         # 下载到临时文件

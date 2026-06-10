@@ -4,10 +4,11 @@
 
 1. [系统概述](#系统概述)
 2. [核心功能](#核心功能)
-3. [交互流程](#交互流程)
-4. [配置说明](#配置说明)
-5. [部署指南](#部署指南)
-6. [注意事项](#注意事项)
+3. [新增功能（v2.0）](#新增功能v20)
+4. [交互流程](#交互流程)
+5. [配置说明](#配置说明)
+6. [部署指南](#部署指南)
+7. [注意事项](#注意事项)
 
 ---
 
@@ -19,17 +20,19 @@ Telegram Media NAS 是一个现代化的 Telegram 媒体下载与管理系统，
 
 | 层级 | 技术 |
 |------|------|
-| 后端 | FastAPI + Pyrogram + SQLite + Redis |
-| 前端 | Vue 3 + TypeScript + Element Plus |
+| 后端 | FastAPI + Pyrogram + SQLite (aiosqlite) + Redis |
+| 前端 | Vue 3 + TypeScript + Element Plus + Pinia |
+| 实时通信 | WebSocket（心跳 + 自动重连） |
 | 部署 | Docker Compose |
 
 ### 核心特性
 
-- **MD5 去重**：自动计算文件哈希值，跳过重复文件
-- **多账号管理**：支持同时管理多个 Telegram 账号
-- **实时进度**：WebSocket 实时推送下载进度
+- **MD5 去重**：自动计算文件哈希值，跳过重复文件，节省存储空间
+- **多账号管理**：支持同时管理多个 Telegram 账号，指纹隔离防止封号
+- **实时进度**：WebSocket 实时推送下载进度，含下载速度和预计剩余时间
 - **灵活过滤**：支持按媒体类型、文件格式、大小等多维度过滤
-- **监听订阅**：实时监听聊天/频道新消息自动下载
+- **监听订阅**：实时监听聊天/频道新消息，自动下载或转发
+- **断点续传**：任务暂停/恢复、异常重启后自动恢复未完成任务
 
 ---
 
@@ -66,12 +69,19 @@ Telegram Media NAS 是一个现代化的 Telegram 媒体下载与管理系统，
 
 ```
 pending   → 等待执行
-running   → 执行中
-paused    → 已暂停
+running   → 执行中（显示实时速度和 ETA）
+paused    → 已暂停（可恢复）
 completed → 已完成
-failed    → 失败
+failed    → 失败（可重试）
 cancelled → 已取消
 ```
+
+#### 实时监控
+
+- **下载速度**：每秒计算 bytes/s，显示 MB/s 或 KB/s
+- **预计剩余时间**：根据当前速度和剩余文件大小估算 ETA
+- **文件进度**：当前正在下载的文件名和百分比
+- **WebSocket 推送**：进度变化实时推送到前端，无需刷新页面
 
 ---
 
@@ -219,6 +229,42 @@ downloads/
 
 - **AND**：所有条件都满足
 - **OR**：任一条件满足
+
+---
+
+## 新增功能（v2.0）
+
+### 8. 系统健康面板
+
+Dashboard 首页实时展示系统运行状态：磁盘剩余空间、下载队列深度、活跃监听数、在线账号数、总文件数、今日完成任务数。
+
+**API**: `GET /api/v1/system/health`
+
+### 9. 缩略图预览
+
+文件管理页面支持图片缩略图（48x48）和点击大图弹窗预览。非图片文件显示类型图标占位。
+
+**API**: `GET /api/v1/files/{id}/thumbnail` | `GET /api/v1/files/{id}/preview`
+
+### 10. 聊天收藏夹
+
+收藏常用聊天 ID，创建任务时显示为快捷标签一键选择。支持备注和删除。
+
+**API**: `GET/POST/DELETE /api/v1/favorites/`
+
+### 11. Settings 动态持久化
+
+系统设置通过 Web 界面实时修改并持久化到数据库，无需重启。支持 Telegram 连接测试。
+
+**API**: `PUT /api/v1/settings/telegram` | `PUT /api/v1/settings/download` | `POST /api/v1/settings/telegram/test`
+
+### 12. 下载速度 & ETA
+
+任务运行时每秒计算实时下载速度（MB/s），并估算剩余时间。通过 WebSocket 实时推送到前端。
+
+### 13. WebSocket 增强
+
+全局通知 WebSocket 支持 30s 心跳保活和指数退避自动重连。Dashboard/Tasks 页面接入实时数据刷新。
 
 ---
 
@@ -394,10 +440,17 @@ SESSION_PATH=./sessions                  # Telegram 会话目录
 
 | 配置项 | 默认值 | 说明 |
 |--------|--------|------|
+| TELEGRAM_API_ID | 0 | Telegram API ID |
+| TELEGRAM_API_HASH | "" | Telegram API Hash |
+| TELEGRAM_BOT_TOKEN | "" | Bot Token（可选） |
 | MAX_CONCURRENT_DOWNLOADS | 5 | 最大并发下载数 |
 | DOWNLOAD_TIMEOUT | 300 | 下载超时时间（秒） |
 | MAX_RETRIES | 3 | 失败重试次数 |
+| DOWNLOAD_PATH | ./downloads | 下载文件保存路径 |
+| TEMP_PATH | ./temp | 临时文件路径 |
 | ACCESS_TOKEN_EXPIRE_MINUTES | 10080 | JWT 有效期（7天） |
+
+> 💡 以上设置除 `MAX_RETRIES` 外，均支持通过 Web 界面动态修改并持久化到数据库。
 
 ### 获取 Telegram API 凭证
 

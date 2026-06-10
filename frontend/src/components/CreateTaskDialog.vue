@@ -11,6 +11,23 @@
         <el-input v-model="form.chat_id" placeholder="输入聊天ID或选择已有聊天" clearable />
       </el-form-item>
 
+      <!-- 收藏聊天快捷选择 -->
+      <el-form-item v-if="favorites.length > 0" label="快捷选择">
+        <div class="favorite-chips">
+          <el-tag
+            v-for="fav in favorites"
+            :key="fav.id"
+            :type="form.chat_id === fav.chat_id ? 'success' : 'info'"
+            effect="plain"
+            size="large"
+            @click="selectFavorite(fav)"
+            class="fav-chip"
+          >
+            {{ fav.chat_title || fav.chat_id }}
+          </el-tag>
+        </div>
+      </el-form-item>
+
       <!-- 聊天名称 -->
       <el-form-item label="聊天名称" prop="chat_title">
         <el-input v-model="form.chat_title" placeholder="可选，用于显示" clearable />
@@ -60,7 +77,7 @@
           <!-- 格式分组快速选择 -->
           <div class="mb-2">
             <el-button
-              v-for="(formats, group) in FORMAT_GROUPS"
+              v-for="(_formats, group) in FORMAT_GROUPS"
               :key="group"
               size="small"
               :type="isGroupSelected(group) ? 'primary' : 'default'"
@@ -112,11 +129,12 @@
 </template>
 
 <script setup lang="ts">
-import { ref, reactive, computed, onMounted } from 'vue'
+import { ref, reactive, onMounted, watch } from 'vue'
 import { ElMessage } from 'element-plus'
 import { QuestionFilled } from '@element-plus/icons-vue'
 import { useTaskStore } from '@/stores/task'
 import { tasksApi, FORMAT_GROUPS, type FileExtensionInfo, type TaskCreate } from '@/api/tasks'
+import { favoritesApi, type FavoriteChat } from '@/api/favorites'
 import type { FormInstance, FormRules } from 'element-plus'
 
 const taskStore = useTaskStore()
@@ -130,10 +148,22 @@ const formatFilterMode = ref<'include' | 'exclude'>('exclude')
 const selectedFormats = ref<Set<string>>(new Set())
 const allFormats = ref<FileExtensionInfo[]>([])
 
+// 收藏
+const favorites = ref<FavoriteChat[]>([])
+
+async function fetchFavorites() {
+  try { favorites.value = await favoritesApi.list() }
+  catch { /* ignore */ }
+}
+
+function selectFavorite(fav: FavoriteChat) {
+  form.chat_id = fav.chat_id
+}
+
 const form = reactive<TaskCreate>({
   chat_id: '',
   chat_title: '',
-  task_type: 'onetime',
+  task_type: 'onetime' as any,
   media_types: [],
   excluded_extensions: [],
   included_extensions: [],
@@ -148,9 +178,9 @@ const rules: FormRules = {
 // 加载可用格式
 async function loadFormats() {
   try {
-    const response = await tasksApi.getFormats()
+    const response: any = await tasksApi.getFormats()
     // by_media_type 是 Record<string, FileExtensionInfo[]>，需要先获取 Object.values
-    allFormats.value = Object.values(response.by_media_type || {}).flat() || []
+    allFormats.value = (Object.values(response.by_media_type || {}).flat() || []) as FileExtensionInfo[]
   } catch (error) {
     console.error('加载格式列表失败:', error)
   }
@@ -216,7 +246,7 @@ async function handleSubmit() {
         chat_id: form.chat_id,
         chat_title: form.chat_title,
         task_type: form.task_type,
-        media_types: form.media_types.length > 0 ? form.media_types : undefined,
+        media_types: (form.media_types ?? []).length > 0 ? form.media_types : undefined,
         limit: form.limit,
         offset_id: form.offset_id,
         excluded_extensions: form.excluded_extensions,
@@ -237,7 +267,7 @@ function handleClose() {
   formRef.value?.resetFields()
   form.chat_id = ''
   form.chat_title = ''
-  form.task_type = 'onetime'
+  form.task_type = 'onetime' as any
   form.media_types = []
   form.limit = 0
   form.offset_id = 0
@@ -253,6 +283,12 @@ const emit = defineEmits<{
 
 onMounted(() => {
   loadFormats()
+  fetchFavorites()
+})
+
+// 对话框打开时刷新收藏列表
+watch(visible, (val) => {
+  if (val) fetchFavorites()
 })
 </script>
 
@@ -293,4 +329,8 @@ onMounted(() => {
 .ml-1 {
   margin-left: 0.25rem;
 }
+
+.favorite-chips { display: flex; flex-wrap: wrap; gap: 8px; }
+.fav-chip { cursor: pointer; transition: transform .15s; }
+.fav-chip:hover { transform: scale(1.05); }
 </style>

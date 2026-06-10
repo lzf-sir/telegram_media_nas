@@ -1,118 +1,45 @@
 <template>
-  <div class="init-container">
-    <!-- 背景装饰 -->
-    <div class="bg-decoration">
-      <div class="bg-circle bg-circle-1"></div>
-      <div class="bg-circle bg-circle-2"></div>
-      <div class="bg-circle bg-circle-3"></div>
+  <div class="init-page">
+    <div class="init-bg">
+      <div class="init-orb init-orb-1"></div>
+      <div class="init-orb init-orb-2"></div>
     </div>
+    <div class="init-wrapper">
+      <div class="init-card glass-card">
+        <!-- Logo -->
+        <svg width="48" height="48" viewBox="0 0 48 48" fill="none" style="margin-bottom:16px">
+          <rect width="48" height="48" rx="14" fill="url(#init-logo)"/>
+          <path d="M14 24L22 32L34 16" stroke="white" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"/>
+          <defs><linearGradient id="init-logo" x1="0" y1="0" x2="48" y2="48"><stop stop-color="#22C55E"/><stop offset="1" stop-color="#22D3BB"/></linearGradient></defs>
+        </svg>
+        <h1 class="init-title">系统初始化</h1>
+        <p class="init-desc">创建管理员账户以开始使用 Telegram Media NAS</p>
 
-    <!-- 主题切换 -->
-    <div class="theme-toggle-wrapper">
-      <theme-toggle />
-    </div>
+        <el-alert type="info" :closable="false" style="margin:16px 0;text-align:left" show-icon>
+          首次使用，请设置管理员账户
+        </el-alert>
 
-    <!-- 初始化卡片 -->
-    <div class="init-card glass-card">
-      <!-- Logo -->
-      <div class="init-logo">
-        <div class="logo-icon">
-          <el-icon :size="32"><Setting /></el-icon>
+        <el-form ref="formRef" :model="form" :rules="rules" @submit.prevent="handleSubmit">
+          <el-form-item prop="username">
+            <el-input v-model="form.username" placeholder="用户名（3-50字符）" size="large" :prefix-icon="User" @keyup.enter="handleSubmit" />
+          </el-form-item>
+          <el-form-item prop="password">
+            <el-input v-model="form.password" type="password" placeholder="密码（至少6位）" size="large" show-password :prefix-icon="Lock" @keyup.enter="handleSubmit" />
+          </el-form-item>
+          <el-form-item prop="confirmPassword">
+            <el-input v-model="form.confirmPassword" type="password" placeholder="确认密码" size="large" show-password :prefix-icon="Lock" @keyup.enter="handleSubmit" />
+          </el-form-item>
+          <el-form-item>
+            <el-button type="primary" size="large" :loading="authStore.loading" class="init-btn" @click="handleSubmit">
+              {{ authStore.loading ? '初始化中...' : '完成初始化' }}
+            </el-button>
+          </el-form-item>
+        </el-form>
+
+        <div class="init-footer">
+          <ThemeToggle />
+          <span class="version-text">v2.0</span>
         </div>
-        <h1 class="logo-title">系统初始化</h1>
-        <p class="logo-subtitle">创建管理员账户以开始使用</p>
-      </div>
-
-      <!-- 欢迎信息 -->
-      <div class="welcome-info">
-        <el-icon color="var(--primary-color)" :size="20"><InfoFilled /></el-icon>
-        <span>欢迎使用 Telegram Media NAS，请设置管理员账户</span>
-      </div>
-
-      <!-- 初始化表单 -->
-      <el-form
-        ref="formRef"
-        :model="form"
-        :rules="rules"
-        class="init-form"
-        @submit.prevent="handleSubmit"
-      >
-        <el-form-item prop="username">
-          <template #label>
-            <span class="form-label">用户名</span>
-          </template>
-          <el-input
-            v-model="form.username"
-            placeholder="3-50个字符，支持字母、数字和下划线"
-            maxlength="50"
-            show-word-limit
-            size="large"
-            clearable
-            @keyup.enter="handleSubmit"
-          >
-            <template #prefix>
-              <el-icon><User /></el-icon>
-            </template>
-          </el-input>
-        </el-form-item>
-
-        <el-form-item prop="password">
-          <template #label>
-            <span class="form-label">密码</span>
-          </template>
-          <el-input
-            v-model="form.password"
-            type="password"
-            placeholder="至少6个字符"
-            maxlength="100"
-            show-password
-            size="large"
-            clearable
-            @keyup.enter="handleSubmit"
-          >
-            <template #prefix>
-              <el-icon><Lock /></el-icon>
-            </template>
-          </el-input>
-        </el-form-item>
-
-        <el-form-item prop="password_confirm">
-          <template #label>
-            <span class="form-label">确认密码</span>
-          </template>
-          <el-input
-            v-model="form.password_confirm"
-            type="password"
-            placeholder="请再次输入密码"
-            maxlength="100"
-            show-password
-            size="large"
-            clearable
-            @keyup.enter="handleSubmit"
-          >
-            <template #prefix>
-              <el-icon><Lock /></el-icon>
-            </template>
-          </el-input>
-        </el-form-item>
-
-        <el-form-item>
-          <el-button
-            type="primary"
-            size="large"
-            :loading="authStore.loading"
-            class="submit-btn"
-            @click="handleSubmit"
-          >
-            <span v-if="!authStore.loading">完成初始化</span>
-            <span v-else>初始化中...</span>
-          </el-button>
-        </el-form-item>
-      </el-form>
-
-      <!-- 底部信息 -->
-      <div class="init-footer">
-        <el-text type="info" size="small">v1.0.0</el-text>
       </div>
     </div>
   </div>
@@ -121,72 +48,38 @@
 <script setup lang="ts">
 import { ref, reactive } from 'vue'
 import { useRouter } from 'vue-router'
-import { ElMessage, FormInstance, FormRules } from 'element-plus'
-import { Setting, User, Lock, InfoFilled } from '@element-plus/icons-vue'
+import type { FormInstance, FormRules } from 'element-plus'
+import { User, Lock } from '@element-plus/icons-vue'
 import { useAuthStore } from '@/stores/auth'
 import ThemeToggle from '@/components/ThemeToggle.vue'
 
 const router = useRouter()
 const authStore = useAuthStore()
-
 const formRef = ref<FormInstance>()
+const form = reactive({ username: '', password: '', confirmPassword: '' })
 
-const form = reactive({
-  username: '',
-  password: '',
-  password_confirm: '',
-})
+const validateConfirm = (_rule: any, value: string, cb: any) => {
+  if (value !== form.password) cb(new Error('两次密码不一致'))
+  else cb()
+}
 
 const rules: FormRules = {
-  username: [
-    { required: true, message: '请输入用户名', trigger: 'blur' },
-    { min: 3, max: 50, message: '用户名长度为 3-50 个字符', trigger: 'blur' },
-    {
-      pattern: /^[a-zA-Z0-9_]+$/,
-      message: '用户名只能包含字母、数字和下划线',
-      trigger: 'blur',
-    },
-  ],
-  password: [
-    { required: true, message: '请输入密码', trigger: 'blur' },
-    { min: 6, max: 100, message: '密码长度至少 6 个字符', trigger: 'blur' },
-  ],
-  password_confirm: [
-    { required: true, message: '请确认密码', trigger: 'blur' },
-    {
-      validator: (_rule, value, callback) => {
-        if (value !== form.password) {
-          callback(new Error('两次输入的密码不一致'))
-        } else {
-          callback()
-        }
-      },
-      trigger: 'blur',
-    },
-  ],
+  username: [{ required: true, message: '请输入用户名', trigger: 'blur' }, { min: 3, max: 50, message: '3-50个字符', trigger: 'blur' }],
+  password: [{ required: true, message: '请输入密码', trigger: 'blur' }, { min: 6, message: '至少6位', trigger: 'blur' }],
+  confirmPassword: [{ required: true, message: '请确认密码', trigger: 'blur' }, { validator: validateConfirm, trigger: 'blur' }],
 }
 
 async function handleSubmit() {
   if (!formRef.value) return
-
-  await formRef.value.validate(async (valid) => {
-    if (!valid) return
-
-    const success = await authStore.initialize({
-      username: form.username,
-      password: form.password,
-      password_confirm: form.password_confirm,
-    })
-
-    if (success) {
-      ElMessage.success('初始化成功')
-      router.push({ name: 'Dashboard' })
-    }
-  })
+  const valid = await formRef.value.validate().catch(() => false)
+  if (!valid) return
+  const success = await authStore.initialize({ username: form.username, password: form.password, password_confirm: form.confirmPassword })
+  if (success) router.push('/dashboard')
 }
 </script>
 
 <style scoped>
+<<<<<<< HEAD
 .init-container {
   display: flex;
   align-items: center;
@@ -368,4 +261,20 @@ async function handleSubmit() {
 }
 
 
+=======
+.init-page { position: relative; height: 100vh; width: 100vw; display: flex; align-items: center; justify-content: center; overflow: hidden; }
+.init-bg { position: absolute; inset: 0; pointer-events: none; }
+.init-orb { position: absolute; border-radius: 50%; filter: blur(120px); opacity: 0.12; }
+.init-orb-1 { width: 500px; height: 500px; top: -150px; right: -100px; background: var(--accent); animation: orbA 15s ease-in-out infinite; }
+.init-orb-2 { width: 400px; height: 400px; bottom: -100px; left: -80px; background: #8B5CF6; animation: orbB 18s ease-in-out infinite; }
+@keyframes orbA { 0%,100% { transform: translate(0,0) scale(1); } 50% { transform: translate(-50px,30px) scale(1.1); } }
+@keyframes orbB { 0%,100% { transform: translate(0,0) scale(1); } 50% { transform: translate(40px,-20px) scale(1.15); } }
+.init-wrapper { position: relative; z-index: 1; }
+.init-card { width: 440px; max-width: 90vw; padding: var(--space-10) var(--space-8); border-radius: var(--radius-3xl); text-align: center; }
+.init-title { font-family: var(--font-heading); font-size: 24px; font-weight: 700; color: var(--text-primary); }
+.init-desc { color: var(--text-tertiary); margin-top: var(--space-2); font-size: 14px; }
+.init-btn { width: 100%; height: 44px; font-size: 15px; font-weight: 600; letter-spacing: 4px; margin-top: var(--space-2); }
+.init-footer { display: flex; align-items: center; justify-content: center; gap: var(--space-4); margin-top: var(--space-4); }
+.version-text { font-family: var(--font-mono); font-size: 12px; color: var(--text-tertiary); }
+>>>>>>> 2d69f9af031a6c0fd791c1d47c994b92296ce03a
 </style>

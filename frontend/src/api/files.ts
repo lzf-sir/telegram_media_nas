@@ -19,6 +19,9 @@ export interface FileInfo {
   downloaded_at: string | null
 }
 
+/** FileInfo 别名，供视图层使用 */
+export type FileItem = FileInfo
+
 export interface FileListResponse {
   total: number
   page: number

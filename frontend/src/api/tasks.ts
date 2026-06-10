@@ -84,6 +84,8 @@ export interface Task {
   completed_at: string | null
   updated_at: string | null
   progress?: number
+  download_speed?: number
+  eta_seconds?: number
 }
 
 // 任务详情（包含文件列表）
